@@ -187,6 +187,63 @@ const addCommentToPost = async (req, res) => {
     }
 };
 
+// @desc    Edit own post
+// @route   PUT /api/posts/:id
+// @access  Private
+const editPost = async (req, res) => {
+    try {
+        const { content, category } = req.body;
+
+        const post = await Post.findById(req.params.id);
+
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: "Post not found",
+            });
+        }
+
+        // Only allow the author to edit
+        if (post.author.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: "You can only edit your own posts",
+            });
+        }
+
+        if (!content || !content.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Post content is required",
+            });
+        }
+
+        post.content = content.trim();
+        if (category) {
+            post.category = category;
+        }
+
+        await post.save();
+
+        const updatedPost = await Post.findById(req.params.id)
+            .populate("author", "name username email bio avatar")
+            .populate("comments.user", "name username");
+
+        res.status(200).json({
+            success: true,
+            message: "Post updated successfully",
+            post: updatedPost,
+        });
+    } catch (error) {
+        console.error("Edit post error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Server error while editing post",
+        });
+    }
+};
+
 // @desc    Delete own post
 // @route   DELETE /api/posts/:id
 // @access  Private
@@ -231,5 +288,6 @@ module.exports = {
     getMyPosts,
     toggleLikePost,
     addCommentToPost,
+    editPost,
     deletePost,
 };
