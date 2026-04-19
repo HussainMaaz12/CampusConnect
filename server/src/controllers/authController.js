@@ -1,6 +1,9 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Generate JWT token
 const generateToken = (id) => {
@@ -207,9 +210,129 @@ const updateProfile = async (req, res) => {
     }
 };
 
+// @desc    Google OAuth login/register
+// @route   POST /api/auth/google
+// @access  Public
+const googleLogin = async (req, res) => {
+    try {
+        const { credential, googleUser: clientGoogleUser } = req.body;
+
+        if (!credential && !clientGoogleUser) {
+            return res.status(400).json({
+                success: false,
+                message: "Google credential is required",
+            });
+        }
+
+        let googleUserData;
+
+        // If we have an access_token (implicit flow), verify by fetching user info from Google
+        if (credential) {
+            try {
+                const response = await fetch(
+                    "https://www.googleapis.com/oauth2/v3/userinfo",
+                    { headers: { Authorization: `Bearer ${credential}` } }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Invalid Google access token");
+                }
+
+                googleUserData = await response.json();
+            } catch (fetchError) {
+                // Fall back to client-provided Google user data
+                if (clientGoogleUser && clientGoogleUser.email) {
+                    googleUserData = clientGoogleUser;
+                } else {
+                    return res.status(401).json({
+                        success: false,
+                        message: "Failed to verify Google token",
+                    });
+                }
+            }
+        } else {
+            googleUserData = clientGoogleUser;
+        }
+
+        const { sub: googleId, email, name, picture } = googleUserData;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Could not retrieve email from Google",
+            });
+        }
+
+        // Check if user already exists with this Google ID or email
+        let user = await User.findOne({
+            $or: [
+                ...(googleId ? [{ googleId }] : []),
+                { email: email.toLowerCase() },
+            ],
+        });
+
+        if (user) {
+            // Update Google ID if user exists by email but not by Google ID
+            if (!user.googleId && googleId) {
+                user.googleId = googleId;
+                if (picture && !user.avatar) {
+                    user.avatar = picture;
+                }
+                await user.save();
+            }
+        } else {
+            // Create new user
+            // Generate a unique username from name
+            const displayName = name || email.split("@")[0];
+            const baseUsername = displayName
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, "")
+                .slice(0, 15);
+            let username = baseUsername;
+            let counter = 1;
+            while (await User.findOne({ username })) {
+                username = `${baseUsername}${counter}`;
+                counter++;
+            }
+
+            user = await User.create({
+                name: (name || email.split("@")[0]).trim(),
+                username,
+                email: email.toLowerCase().trim(),
+                googleId: googleId || null,
+                avatar: picture || "",
+            });
+        }
+
+        const token = generateToken(user._id);
+
+        res.status(200).json({
+            success: true,
+            message: "Google login successful",
+            token,
+            user: {
+                _id: user._id,
+                name: user.name,
+                username: user.username,
+                email: user.email,
+                bio: user.bio,
+                avatar: user.avatar,
+            },
+        });
+    } catch (error) {
+        console.error("Google login error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Google authentication failed",
+        });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
     getMe,
     updateProfile,
+    googleLogin,
 };
