@@ -12,7 +12,7 @@ app.use(
     cors({
         origin: [
             "http://localhost:5173",
-            "https://YOUR-VERCEL-DOMAIN.vercel.app",
+            "https://campus-connect-smoky-eta.vercel.app/",
         ],
         credentials: true,
     })
