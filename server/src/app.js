@@ -7,8 +7,16 @@ const postRoutes = require("./routes/postRoutes");
 
 const app = express();
 
-// TEMPORARY: open CORS for competition/demo reliability
-app.use(cors());
+// Middlewares
+app.use(
+    cors({
+        origin: [
+            "http://localhost:5173",
+            "https://campus-connect-smoky-eta.vercel.app",
+        ],
+        credentials: true,
+    })
+);
 
 app.use(express.json());
 
