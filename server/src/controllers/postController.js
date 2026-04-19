@@ -5,7 +5,7 @@ const Post = require("../models/Post");
 // @access  Private
 const createPost = async (req, res) => {
     try {
-        const { content } = req.body;
+        const { content, category } = req.body;
 
         if (!content || !content.trim()) {
             return res.status(400).json({
@@ -14,10 +14,16 @@ const createPost = async (req, res) => {
             });
         }
 
-        const newPost = await Post.create({
+        const postData = {
             author: req.user._id,
             content: content.trim(),
-        });
+        };
+
+        if (category) {
+            postData.category = category;
+        }
+
+        const newPost = await Post.create(postData);
 
         const populatedPost = await Post.findById(newPost._id)
             .populate("author", "name username email bio avatar")
@@ -181,10 +187,49 @@ const addCommentToPost = async (req, res) => {
     }
 };
 
+// @desc    Delete own post
+// @route   DELETE /api/posts/:id
+// @access  Private
+const deletePost = async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                message: "Post not found",
+            });
+        }
+
+        // Only allow the author to delete
+        if (post.author.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: "You can only delete your own posts",
+            });
+        }
+
+        await Post.findByIdAndDelete(req.params.id);
+
+        res.status(200).json({
+            success: true,
+            message: "Post deleted successfully",
+        });
+    } catch (error) {
+        console.error("Delete post error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Server error while deleting post",
+        });
+    }
+};
+
 module.exports = {
     createPost,
     getAllPosts,
     getMyPosts,
     toggleLikePost,
     addCommentToPost,
+    deletePost,
 };

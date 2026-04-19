@@ -13,6 +13,11 @@ const postSchema = new mongoose.Schema(
             trim: true,
             maxlength: [500, "Post content cannot exceed 500 characters"],
         },
+        category: {
+            type: String,
+            enum: ["General", "Academic", "Events", "Clubs", "Lost & Found", "Hostel", "Confession"],
+            default: "General",
+        },
         likes: [
             {
                 type: mongoose.Schema.Types.ObjectId,

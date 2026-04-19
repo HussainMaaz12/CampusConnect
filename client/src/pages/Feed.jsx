@@ -8,12 +8,26 @@ function Feed() {
 
     const [posts, setPosts] = useState([]);
     const [postContent, setPostContent] = useState("");
+    const [postCategory, setPostCategory] = useState("General");
     const [commentInputs, setCommentInputs] = useState({});
     const [loadingPosts, setLoadingPosts] = useState(true);
     const [creatingPost, setCreatingPost] = useState(false);
     const [likingPostId, setLikingPostId] = useState(null);
     const [commentingPostId, setCommentingPostId] = useState(null);
+    const [deletingPostId, setDeletingPostId] = useState(null);
     const [error, setError] = useState("");
+
+    const categories = ["General", "Academic", "Events", "Clubs", "Lost & Found", "Hostel", "Confession"];
+
+    const categoryColors = {
+        General: "bg-zinc-700 text-zinc-200",
+        Academic: "bg-blue-600/20 text-blue-400 border border-blue-500/30",
+        Events: "bg-purple-600/20 text-purple-400 border border-purple-500/30",
+        Clubs: "bg-green-600/20 text-green-400 border border-green-500/30",
+        "Lost & Found": "bg-yellow-600/20 text-yellow-400 border border-yellow-500/30",
+        Hostel: "bg-cyan-600/20 text-cyan-400 border border-cyan-500/30",
+        Confession: "bg-pink-600/20 text-pink-400 border border-pink-500/30",
+    };
 
     // Fetch all posts
     const fetchPosts = async () => {
@@ -47,10 +61,12 @@ function Feed() {
 
             const response = await api.post("/posts", {
                 content: postContent,
+                category: postCategory,
             });
 
             if (response.data.success) {
                 setPostContent("");
+                setPostCategory("General");
                 await fetchPosts();
             }
         } catch (err) {
@@ -111,6 +127,26 @@ function Feed() {
         }
     };
 
+    // Delete own post
+    const handleDeletePost = async (postId) => {
+        if (!window.confirm("Are you sure you want to delete this post?")) return;
+
+        try {
+            setDeletingPostId(postId);
+
+            const response = await api.delete(`/posts/${postId}`);
+
+            if (response.data.success) {
+                await fetchPosts();
+            }
+        } catch (err) {
+            console.error("Delete post error:", err);
+            setError(err.response?.data?.message || "Failed to delete post");
+        } finally {
+            setDeletingPostId(null);
+        }
+    };
+
     // Check if current user already liked the post
     const isPostLikedByCurrentUser = (post) => {
         if (!authUser) return false;
@@ -153,13 +189,27 @@ function Feed() {
                             className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 outline-none focus:border-orange-500 resize-none"
                         />
 
-                        <button
-                            type="submit"
-                            disabled={creatingPost}
-                            className="bg-orange-500 hover:bg-orange-600 disabled:opacity-70 disabled:cursor-not-allowed px-5 py-3 rounded-xl text-black font-semibold transition"
-                        >
-                            {creatingPost ? "Posting..." : "Post"}
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <select
+                                value={postCategory}
+                                onChange={(e) => setPostCategory(e.target.value)}
+                                className="bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 outline-none focus:border-orange-500 text-white appearance-none cursor-pointer"
+                            >
+                                {categories.map((cat) => (
+                                    <option key={cat} value={cat}>
+                                        {cat}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <button
+                                type="submit"
+                                disabled={creatingPost}
+                                className="bg-orange-500 hover:bg-orange-600 disabled:opacity-70 disabled:cursor-not-allowed px-5 py-3 rounded-xl text-black font-semibold transition"
+                            >
+                                {creatingPost ? "Posting..." : "Post"}
+                            </button>
+                        </div>
                     </form>
                 </div>
 
@@ -184,17 +234,38 @@ function Feed() {
                                 >
                                     <div className="flex items-start justify-between gap-4 mb-3">
                                         <div>
-                                            <h3 className="text-lg font-semibold text-white">
-                                                {post.author?.name || "Unknown User"}
-                                            </h3>
+                                            <div className="flex items-center gap-3 flex-wrap">
+                                                <h3 className="text-lg font-semibold text-white">
+                                                    {post.author?.name || "Unknown User"}
+                                                </h3>
+                                                {post.category && (
+                                                    <span
+                                                        className={`text-xs font-medium px-2.5 py-1 rounded-full ${categoryColors[post.category] || categoryColors.General}`}
+                                                    >
+                                                        {post.category}
+                                                    </span>
+                                                )}
+                                            </div>
                                             <p className="text-sm text-zinc-400">
                                                 @{post.author?.username || "unknown"}
                                             </p>
                                         </div>
 
-                                        <p className="text-xs text-zinc-500">
-                                            {new Date(post.createdAt).toLocaleString()}
-                                        </p>
+                                        <div className="flex items-center gap-3">
+                                            <p className="text-xs text-zinc-500">
+                                                {new Date(post.createdAt).toLocaleString()}
+                                            </p>
+                                            {authUser?._id === post.author?._id && (
+                                                <button
+                                                    onClick={() => handleDeletePost(post._id)}
+                                                    disabled={deletingPostId === post._id}
+                                                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-50 p-1.5 rounded-lg transition text-sm"
+                                                    title="Delete post"
+                                                >
+                                                    {deletingPostId === post._id ? "..." : "🗑️"}
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <p className="text-zinc-200 leading-relaxed mb-4">{post.content}</p>
