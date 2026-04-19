@@ -7,7 +7,7 @@ const api = axios.create({
     },
 });
 
-// Automatically attach token to every request if available
+// Automatically attach token if present
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("campusconnect_token");
