@@ -167,7 +167,7 @@ const getMe = async (req, res) => {
 // @access  Private
 const updateProfile = async (req, res) => {
     try {
-        const { name, bio } = req.body;
+        const { name, bio, avatar } = req.body;
 
         const user = await User.findById(req.user._id);
 
@@ -184,6 +184,13 @@ const updateProfile = async (req, res) => {
 
         if (bio !== undefined) {
             user.bio = bio.trim();
+        }
+
+        if (avatar !== undefined) {
+            // Allow clearing avatar or setting a new one (base64 data URL, max ~2MB)
+            if (avatar === "" || (typeof avatar === "string" && avatar.length < 2_000_000)) {
+                user.avatar = avatar;
+            }
         }
 
         await user.save();
