@@ -7,72 +7,57 @@ function Navbar() {
 
     const isActive = (path) => location.pathname === path;
 
+    const navLinkClass = (path) =>
+        `px-4 py-2 rounded-full text-sm font-medium transition border ${
+            isActive(path)
+                ? "bg-gradient-to-r from-fuchsia-500 to-violet-500 border-fuchsia-300/40 text-white shadow-[0_0_25px_rgba(168,85,247,0.45)]"
+                : "bg-white/5 border-white/10 text-zinc-200 hover:bg-white/10"
+        }`;
+
     return (
-        <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-zinc-800">
+        <header className="sticky top-0 z-50 border-b border-white/10 bg-black/35 backdrop-blur-2xl">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-                {/* Logo / Brand */}
                 <Link to={isAuthenticated ? "/feed" : "/"} className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-orange-500 text-black flex items-center justify-center font-bold text-lg shadow-lg">
-                        C
+                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-fuchsia-500 via-violet-500 to-cyan-400 text-white flex items-center justify-center font-black text-lg shadow-[0_10px_30px_rgba(139,92,246,0.45)]">
+                        CC
                     </div>
                     <div>
                         <h1 className="text-white font-bold text-lg leading-none">CampusConnect</h1>
-                        <p className="text-zinc-500 text-xs mt-1">Student Social Platform</p>
+                        <p className="text-zinc-300/80 text-xs mt-1">for student creators + communities</p>
                     </div>
                 </Link>
 
-                {/* Nav Links */}
                 <nav className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
                     {isAuthenticated ? (
                         <>
-                            <Link
-                                to="/feed"
-                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${isActive("/feed")
-                                        ? "bg-orange-500 text-black"
-                                        : "bg-zinc-900 text-zinc-300 hover:bg-zinc-800"
-                                    }`}
-                            >
+                            <Link to="/feed" className={navLinkClass("/feed")}>
                                 Feed
                             </Link>
-
-                            <Link
-                                to="/profile"
-                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${isActive("/profile")
-                                        ? "bg-orange-500 text-black"
-                                        : "bg-zinc-900 text-zinc-300 hover:bg-zinc-800"
-                                    }`}
-                            >
+                            <Link to="/profile" className={navLinkClass("/profile")}>
                                 Profile
                             </Link>
 
-                            <div className="hidden md:flex items-center px-4 py-2 rounded-xl bg-zinc-900 text-zinc-400 text-sm">
+                            <div className="hidden md:flex items-center px-4 py-2 rounded-full bg-white/5 border border-white/10 text-zinc-200 text-sm">
                                 @{authUser?.username || "user"}
                             </div>
 
                             <button
                                 onClick={logout}
-                                className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-black text-sm font-semibold transition"
+                                className="px-4 py-2 rounded-full bg-white text-black hover:bg-zinc-200 text-sm font-semibold transition"
                             >
                                 Logout
                             </button>
                         </>
                     ) : (
                         <>
-                            <Link
-                                to="/login"
-                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${isActive("/login")
-                                        ? "bg-orange-500 text-black"
-                                        : "bg-zinc-900 text-zinc-300 hover:bg-zinc-800"
-                                    }`}
-                            >
+                            <Link to="/login" className={navLinkClass("/login")}>
                                 Login
                             </Link>
-
                             <Link
                                 to="/register"
-                                className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-black text-sm font-semibold transition"
+                                className="px-4 py-2 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-fuchsia-500 to-violet-500 hover:opacity-95 transition shadow-[0_0_25px_rgba(168,85,247,0.4)]"
                             >
-                                Get Started
+                                Join Now
                             </Link>
                         </>
                     )}
