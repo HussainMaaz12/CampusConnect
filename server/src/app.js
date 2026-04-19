@@ -8,7 +8,16 @@ const postRoutes = require("./routes/postRoutes");
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(
+    cors({
+        origin: [
+            "http://localhost:5173",
+            "https://YOUR-VERCEL-DOMAIN.vercel.app",
+        ],
+        credentials: true,
+    })
+);
+
 app.use(express.json());
 
 // Routes
