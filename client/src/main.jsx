@@ -1,18 +1,19 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
-import "./index.css";
-import { AuthProvider } from "./context/AuthContext";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { AuthProvider } from "./context/AuthContext";
+import { SocketProvider } from "./context/SocketContext";
+import App from "./App.jsx";
+import "./index.css";
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
-
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </GoogleOAuthProvider>
-  </React.StrictMode>
+createRoot(document.getElementById("root")).render(
+    <StrictMode>
+        <GoogleOAuthProvider clientId="314697397878-21j20tee42raa4o9gi18aj79onenin7d.apps.googleusercontent.com">
+            <AuthProvider>
+                <SocketProvider>
+                    <App />
+                </SocketProvider>
+            </AuthProvider>
+        </GoogleOAuthProvider>
+    </StrictMode>
 );

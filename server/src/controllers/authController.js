@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
+const { uploadToCloudinary } = require("../config/cloudinary");
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -67,6 +68,8 @@ const registerUser = async (req, res) => {
                 email: user.email,
                 bio: user.bio,
                 avatar: user.avatar,
+                followers: user.followers || [],
+                following: user.following || [],
             },
         });
     } catch (error) {
@@ -124,6 +127,8 @@ const loginUser = async (req, res) => {
                 email: user.email,
                 bio: user.bio,
                 avatar: user.avatar,
+                followers: user.followers || [],
+                following: user.following || [],
             },
         });
     } catch (error) {
@@ -141,15 +146,18 @@ const loginUser = async (req, res) => {
 // @access  Private
 const getMe = async (req, res) => {
     try {
+        const user = await User.findById(req.user._id);
         res.status(200).json({
             success: true,
             user: {
-                _id: req.user._id,
-                name: req.user.name,
-                username: req.user.username,
-                email: req.user.email,
-                bio: req.user.bio,
-                avatar: req.user.avatar,
+                _id: user._id,
+                name: user.name,
+                username: user.username,
+                email: user.email,
+                bio: user.bio,
+                avatar: user.avatar,
+                followers: user.followers || [],
+                following: user.following || [],
             },
         });
     } catch (error) {
@@ -187,8 +195,22 @@ const updateProfile = async (req, res) => {
         }
 
         if (avatar !== undefined) {
-            // Allow clearing avatar or setting a new one (base64 data URL, max ~2MB)
-            if (avatar === "" || (typeof avatar === "string" && avatar.length < 2_000_000)) {
+            if (avatar === "") {
+                // Clear avatar
+                user.avatar = "";
+            } else if (typeof avatar === "string" && avatar.startsWith("data:")) {
+                // Upload base64 to Cloudinary
+                try {
+                    const result = await uploadToCloudinary(avatar, "campusconnect/avatars", "image");
+                    user.avatar = result.url;
+                } catch (uploadErr) {
+                    console.error("Avatar upload error:", uploadErr.message);
+                    // Fallback: store as base64 if Cloudinary fails
+                    if (avatar.length < 2_000_000) {
+                        user.avatar = avatar;
+                    }
+                }
+            } else if (typeof avatar === "string" && avatar.length < 2_000_000) {
                 user.avatar = avatar;
             }
         }
@@ -205,6 +227,8 @@ const updateProfile = async (req, res) => {
                 email: user.email,
                 bio: user.bio,
                 avatar: user.avatar,
+                followers: user.followers || [],
+                following: user.following || [],
             },
         });
     } catch (error) {
@@ -214,6 +238,123 @@ const updateProfile = async (req, res) => {
             success: false,
             message: "Server error while updating profile",
         });
+    }
+};
+
+// @desc    Get public profile by username
+// @route   GET /api/auth/profile/:username
+// @access  Public
+const getPublicProfile = async (req, res) => {
+    try {
+        const user = await User.findOne({ username: req.params.username.toLowerCase() })
+            .select("name username bio avatar followers following createdAt")
+            .populate("followers", "name username avatar")
+            .populate("following", "name username avatar");
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            user,
+        });
+    } catch (error) {
+        console.error("Get public profile error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+        });
+    }
+};
+
+// @desc    Toggle follow/unfollow a user
+// @route   PUT /api/auth/follow/:userId
+// @access  Private
+const toggleFollow = async (req, res) => {
+    try {
+        const targetUserId = req.params.userId;
+        const currentUserId = req.user._id.toString();
+
+        if (targetUserId === currentUserId) {
+            return res.status(400).json({
+                success: false,
+                message: "You cannot follow yourself",
+            });
+        }
+
+        const targetUser = await User.findById(targetUserId);
+        const currentUser = await User.findById(currentUserId);
+
+        if (!targetUser || !currentUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        const isFollowing = currentUser.following.some(
+            (id) => id.toString() === targetUserId
+        );
+
+        if (isFollowing) {
+            // Unfollow
+            currentUser.following = currentUser.following.filter(
+                (id) => id.toString() !== targetUserId
+            );
+            targetUser.followers = targetUser.followers.filter(
+                (id) => id.toString() !== currentUserId
+            );
+        } else {
+            // Follow
+            currentUser.following.push(targetUserId);
+            targetUser.followers.push(currentUserId);
+        }
+
+        await currentUser.save();
+        await targetUser.save();
+
+        res.status(200).json({
+            success: true,
+            message: isFollowing ? "Unfollowed" : "Following",
+            isFollowing: !isFollowing,
+            followersCount: targetUser.followers.length,
+        });
+    } catch (error) {
+        console.error("Toggle follow error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+        });
+    }
+};
+
+// @desc    Get suggested users to follow
+// @route   GET /api/auth/suggestions
+// @access  Private
+const getSuggestions = async (req, res) => {
+    try {
+        const currentUser = await User.findById(req.user._id);
+        const followingIds = currentUser.following.map((id) => id.toString());
+        followingIds.push(req.user._id.toString());
+
+        const suggestions = await User.find({
+            _id: { $nin: followingIds },
+        })
+            .select("name username bio avatar followers")
+            .sort({ createdAt: -1 })
+            .limit(5);
+
+        res.status(200).json({
+            success: true,
+            users: suggestions,
+        });
+    } catch (error) {
+        console.error("Get suggestions error:", error.message);
+        res.status(500).json({ success: false, message: "Server error" });
     }
 };
 
@@ -324,6 +465,8 @@ const googleLogin = async (req, res) => {
                 email: user.email,
                 bio: user.bio,
                 avatar: user.avatar,
+                followers: user.followers || [],
+                following: user.following || [],
             },
         });
     } catch (error) {
@@ -341,5 +484,8 @@ module.exports = {
     loginUser,
     getMe,
     updateProfile,
+    getPublicProfile,
+    toggleFollow,
+    getSuggestions,
     googleLogin,
 };

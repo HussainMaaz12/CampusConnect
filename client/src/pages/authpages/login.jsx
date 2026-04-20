@@ -17,10 +17,10 @@ const styles = `
   /* Animated gradient mesh background */
   .mesh-bg {
     background:
-      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(249,115,22,0.18) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 50% at 80% 90%, rgba(168,85,247,0.14) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 60% 30%, rgba(251,191,36,0.07) 0%, transparent 50%),
-      #070707;
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(108,99,255,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 90%, rgba(0,212,170,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 60% 30%, rgba(167,139,250,0.07) 0%, transparent 50%),
+      #0A0A0F;
     animation: mesh-shift 12s ease-in-out infinite alternate;
   }
   @keyframes mesh-shift {
@@ -31,26 +31,24 @@ const styles = `
   /* Floating grid */
   .grid-bg {
     background-image:
-      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
     background-size: 40px 40px;
   }
 
   /* Card glass */
   .glass-card {
-    background: rgba(255,255,255,0.03);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(14,14,20,0.88);
+    border: 1px solid rgba(255,255,255,0.06);
     box-shadow:
-      0 0 0 1px rgba(249,115,22,0.08),
+      0 0 0 1px rgba(108,99,255,0.08),
       0 32px 80px rgba(0,0,0,0.6),
-      inset 0 1px 0 rgba(255,255,255,0.06);
+      inset 0 1px 0 rgba(255,255,255,0.04);
   }
 
   /* Gradient brand text */
   .brand-gradient {
-    background: linear-gradient(110deg, #f97316 20%, #a855f7 80%);
+    background: linear-gradient(110deg, #6C63FF 20%, #00D4AA 80%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -59,8 +57,8 @@ const styles = `
   /* Input styling */
   .cc-input {
     width: 100%;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
     border-radius: 14px;
     padding: 13px 16px;
     color: white;
@@ -69,11 +67,11 @@ const styles = `
     outline: none;
     transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
   }
-  .cc-input::placeholder { color: rgba(255,255,255,0.25); }
+  .cc-input::placeholder { color: rgba(255,255,255,0.2); }
   .cc-input:focus {
-    border-color: rgba(249,115,22,0.55);
-    background: rgba(249,115,22,0.05);
-    box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
+    border-color: rgba(108,99,255,0.45);
+    background: rgba(108,99,255,0.03);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.08);
   }
 
   /* Submit button */
@@ -81,31 +79,31 @@ const styles = `
     width: 100%;
     position: relative;
     overflow: hidden;
-    background: linear-gradient(115deg, #f97316 0%, #ea580c 50%, #c2410c 100%);
+    background: linear-gradient(115deg, #6C63FF 0%, #00D4AA 100%);
     border: none;
     border-radius: 14px;
     padding: 14px;
-    color: #000;
+    color: #fff;
     font-weight: 700;
     font-size: 15px;
     font-family: 'Syne', sans-serif;
     cursor: pointer;
     transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s;
-    box-shadow: 0 6px 30px rgba(249,115,22,0.35);
+    box-shadow: 0 6px 30px rgba(108,99,255,0.30);
     letter-spacing: 0.02em;
   }
   .submit-btn::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 55%);
+    background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 55%);
     opacity: 0;
     transition: opacity 0.2s;
   }
   .submit-btn:hover:not(:disabled)::before { opacity: 1; }
   .submit-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(249,115,22,0.50);
+    box-shadow: 0 12px 40px rgba(108,99,255,0.45);
   }
   .submit-btn:active:not(:disabled) { transform: translateY(0); }
   .submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -113,8 +111,8 @@ const styles = `
   /* Loading spinner */
   .spinner {
     width: 16px; height: 16px;
-    border: 2px solid rgba(0,0,0,0.3);
-    border-top-color: #000;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
     display: inline-block;
@@ -143,12 +141,12 @@ const styles = `
   @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
 
   /* Orb decorations */
-  .orb-orange {
-    background: radial-gradient(circle, rgba(249,115,22,0.22) 0%, transparent 70%);
+  .orb-indigo {
+    background: radial-gradient(circle, rgba(108,99,255,0.20) 0%, transparent 70%);
     animation: orb-pulse 7s ease-in-out infinite;
   }
-  .orb-purple {
-    background: radial-gradient(circle, rgba(168,85,247,0.16) 0%, transparent 70%);
+  .orb-teal {
+    background: radial-gradient(circle, rgba(0,212,170,0.14) 0%, transparent 70%);
     animation: orb-pulse 9s ease-in-out infinite reverse;
   }
   @keyframes orb-pulse {
@@ -161,7 +159,7 @@ const styles = `
     display: flex;
     align-items: center;
     gap: 12px;
-    color: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.15);
     font-size: 12px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -170,7 +168,7 @@ const styles = `
     content: '';
     flex: 1;
     height: 1px;
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.06);
   }
 
   /* Social btn */
@@ -180,11 +178,11 @@ const styles = `
     align-items: center;
     justify-content: center;
     gap: 10px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
     border-radius: 12px;
     padding: 12px 16px;
-    color: rgba(255,255,255,0.65);
+    color: rgba(255,255,255,0.55);
     font-size: 14px;
     font-weight: 500;
     font-family: 'DM Sans', sans-serif;
@@ -193,58 +191,42 @@ const styles = `
     text-decoration: none;
   }
   .social-btn:hover {
-    background: rgba(255,255,255,0.08);
-    border-color: rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.12);
     color: #fff;
     transform: translateY(-1px);
   }
-  .social-btn:active {
-    transform: translateY(0);
-  }
-  .social-btn:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-    transform: none;
-  }
+  .social-btn:active { transform: translateY(0); }
+  .social-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
   /* Password show/hide */
   .pw-toggle {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: rgba(255,255,255,0.3);
-    padding: 0;
-    transition: color 0.2s;
-    font-size: 18px;
-    line-height: 1;
+    background: none; border: none; cursor: pointer;
+    color: rgba(255,255,255,0.25); padding: 0;
+    transition: color 0.2s; font-size: 18px; line-height: 1;
   }
-  .pw-toggle:hover { color: rgba(255,255,255,0.7); }
+  .pw-toggle:hover { color: rgba(255,255,255,0.6); }
 
   /* Label */
   .field-label {
-    display: block;
-    font-size: 13px;
-    font-weight: 500;
-    color: rgba(255,255,255,0.55);
-    margin-bottom: 8px;
+    display: block; font-size: 13px; font-weight: 500;
+    color: rgba(255,255,255,0.45); margin-bottom: 8px;
     letter-spacing: 0.02em;
   }
 
   /* Error shake */
-  .error-box {
-    animation: shake 0.4s ease;
-  }
+  .error-box { animation: shake 0.4s ease; }
   @keyframes shake {
     0%,100% { transform: translateX(0); }
     20%,60% { transform: translateX(-5px); }
     40%,80% { transform: translateX(5px); }
   }
 
-  /* Purple accent tag */
-  .purple-tag {
-    background: linear-gradient(110deg, rgba(168,85,247,0.15), rgba(249,115,22,0.10));
-    border: 1px solid rgba(168,85,247,0.2);
-    color: rgba(200,160,255,0.9);
+  /* Tag */
+  .accent-tag {
+    background: linear-gradient(110deg, rgba(108,99,255,0.12), rgba(0,212,170,0.08));
+    border: 1px solid rgba(108,99,255,0.18);
+    color: rgba(167,139,250,0.9);
   }
 
   /* Noise */
@@ -356,13 +338,13 @@ function Login() {
             <style dangerouslySetInnerHTML={{ __html: styles }} />
 
             {/* Ambient orbs */}
-            <div className="orb-orange absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none" />
-            <div className="orb-purple absolute -bottom-32 -right-32 w-[440px] h-[440px] rounded-full pointer-events-none" />
+            <div className="orb-indigo absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none" />
+            <div className="orb-teal absolute -bottom-32 -right-32 w-[440px] h-[440px] rounded-full pointer-events-none" />
 
             {/* Back link */}
             <Link
                 to="/"
-                className="absolute top-6 left-6 flex items-center gap-2 text-sm text-white/30 hover:text-white/70 transition z-10"
+                className="absolute top-6 left-6 flex items-center gap-2 text-sm text-white/25 hover:text-white/60 transition z-10"
             >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M19 12H5M12 5l-7 7 7 7" />
@@ -373,13 +355,13 @@ function Login() {
             <div className="w-full max-w-[420px] card-enter">
                 {/* Logo / brand */}
                 <div className="s1 text-center mb-8">
-                    <div className="inline-flex items-center gap-2 purple-tag rounded-full px-4 py-1.5 text-xs font-semibold mb-5 tracking-wide">
+                    <div className="inline-flex items-center gap-2 accent-tag rounded-full px-4 py-1.5 text-xs font-semibold mb-5 tracking-wide">
                         ✦ CampusConnect
                     </div>
                     <h1 className="text-[2.2rem] font-extrabold leading-tight mb-2">
                         Welcome <span className="brand-gradient">back 👋</span>
                     </h1>
-                    <p className="text-white/35 text-[14px]">
+                    <p className="text-white/30 text-[14px]">
                         Sign in to your campus account to continue.
                     </p>
                 </div>
@@ -389,9 +371,9 @@ function Login() {
 
                     {/* Error */}
                     {error && (
-                        <div className="error-box mb-5 rounded-2xl border border-red-500/25 bg-red-500/8 px-4 py-3 flex items-start gap-2.5">
+                        <div className="error-box mb-5 rounded-2xl border border-red-500/20 bg-red-500/6 px-4 py-3 flex items-start gap-2.5">
                             <span className="text-red-400 mt-0.5 flex-shrink-0">⚠</span>
-                            <p className="text-red-300 text-sm leading-snug">{error}</p>
+                            <p className="text-red-300/80 text-sm leading-snug">{error}</p>
                         </div>
                     )}
 
@@ -409,7 +391,7 @@ function Login() {
                                     className="cc-input pr-11"
                                     autoComplete="email"
                                 />
-                                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none text-base">
+                                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/15 pointer-events-none text-base">
                                     ✉
                                 </span>
                             </div>
@@ -421,7 +403,7 @@ function Login() {
                                 <label className="field-label" style={{ marginBottom: 0 }}>Password</label>
                                 <button
                                     type="button"
-                                    className="text-[12px] text-orange-400/80 hover:text-orange-400 transition font-medium"
+                                    className="text-[12px] text-[#6C63FF]/60 hover:text-[#6C63FF] transition font-medium"
                                     tabIndex={-1}
                                 >
                                     Forgot password?
@@ -489,11 +471,11 @@ function Login() {
                 </div>
 
                 {/* Footer */}
-                <p className="s6 text-white/30 text-[13px] text-center mt-6">
+                <p className="s6 text-white/25 text-[13px] text-center mt-6">
                     New to CampusConnect?{" "}
                     <Link
                         to="/register"
-                        className="text-orange-400 hover:text-orange-300 font-semibold transition"
+                        className="text-[#6C63FF] hover:text-[#A78BFA] font-semibold transition"
                     >
                         Create an account →
                     </Link>

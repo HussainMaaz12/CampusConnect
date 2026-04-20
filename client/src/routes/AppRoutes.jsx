@@ -5,6 +5,7 @@ import Login from "../pages/authpages/login";
 import Register from "../pages/authpages/register";
 import Feed from "../pages/Feed";
 import Profile from "../pages/Profile";
+import UserProfile from "../pages/UserProfile";
 import NotFound from "../pages/NotFound";
 
 import ProtectedRoute from "./ProtectedRoute";
@@ -48,6 +49,15 @@ function AppRoutes() {
                     element={
                         <ProtectedRoute>
                             <Profile />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/user/:username"
+                    element={
+                        <ProtectedRoute>
+                            <UserProfile />
                         </ProtectedRoute>
                     }
                 />
