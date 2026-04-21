@@ -20,12 +20,12 @@ function Navbar() {
                     background: rgba(10,10,15,0.88);
                     backdrop-filter: blur(24px) saturate(1.6);
                     -webkit-backdrop-filter: blur(24px) saturate(1.6);
-                    border-bottom: 1px solid rgba(255,255,255,0.04);
+                    border-top: 1px solid rgba(255,255,255,0.04);
                     transition: background 0.3s;
                 }
                 .nav-glow {
                     position: absolute;
-                    bottom: -1px; left: 0; right: 0; height: 2px;
+                    top: -1px; left: 0; right: 0; height: 2px;
                     background: linear-gradient(90deg, transparent 5%, rgba(108,99,255,0.5) 30%, rgba(0,212,170,0.4) 50%, rgba(255,107,107,0.3) 70%, transparent 95%);
                     opacity: 0.6;
                 }
@@ -41,7 +41,7 @@ function Navbar() {
                 .nav-link.active { color: #6C63FF; background: rgba(108,99,255,0.08); }
                 .nav-link.active::after {
                     content: ''; position: absolute;
-                    bottom: -13px; left: 50%; transform: translateX(-50%);
+                    top: -13px; left: 50%; transform: translateX(-50%);
                     width: 24px; height: 3px;
                     background: linear-gradient(90deg, #6C63FF, #00D4AA);
                     border-radius: 2px;
@@ -91,17 +91,17 @@ function Navbar() {
                     .nav-mobile-btn { display: flex; }
                     .nav-desktop-links { display: none !important; }
                     .nav-mobile-menu {
-                        position: fixed; top: 60px; left: 0; right: 0; bottom: 0;
+                        position: fixed; bottom: 60px; left: 0; right: 0; top: 0;
                         background: rgba(10,10,15,0.96);
                         backdrop-filter: blur(20px);
                         z-index: 100; padding: 20px 24px;
                         display: flex; flex-direction: column; gap: 8px;
-                        animation: slideDown 0.25s ease;
+                        animation: slideUp 0.25s ease;
                     }
-                    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+                    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
                 }
             `}} />
-            <header className="navbar-root sticky top-0 z-50 nav-glass">
+            <header className="navbar-root fixed bottom-0 w-full z-50 nav-glass">
                 <div className="relative">
                     <div className="nav-glow" />
                     <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3">
