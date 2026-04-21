@@ -834,7 +834,7 @@ function Feed() {
                             <div className="relative rounded-[20px] overflow-hidden w-full max-h-[85vh] aspect-[9/16] bg-[#111] mx-2">
                                 {current.media?.length > 0 ? (
                                     current.media[0].type === "video" ?
-                                        <video src={current.media[0].url} autoPlay loop playsInline className="w-full h-full object-cover" /> :
+                                        <video key={current._id || activeStoryIndex} src={current.media[0].url} autoPlay muted loop playsInline className="w-full h-full object-cover" /> :
                                         <img src={current.media[0].url} alt="" className="w-full h-full object-cover" />
                                 ) : (
                                      <div className="w-full h-full flex items-center justify-center p-8 text-center bg-gradient-to-br from-[#6C63FF] to-[#00D4AA]">
