@@ -234,6 +234,22 @@ const toggleLikePost = async (req, res) => {
             io.emit("post:like", { postId: post._id, likes: post.likes, userId: req.user._id });
         }
 
+        // Add Notification
+        if (!alreadyLiked && req.user._id.toString() !== post.author._id.toString()) {
+            const Notification = require("../models/Notification");
+            await Notification.create({
+                recipient: post.author._id,
+                sender: req.user._id,
+                type: "like",
+                post: post._id,
+                content: "liked your post"
+            });
+            const { emitToUser } = require("../socket");
+            if (io && emitToUser) {
+                emitToUser(io, post.author._id, "notification:new", { type: "like", message: "liked your post", sender: req.user });
+            }
+        }
+
         res.status(200).json({
             success: true,
             message: alreadyLiked ? "Post unliked" : "Post liked",
@@ -286,6 +302,21 @@ const addCommentToPost = async (req, res) => {
         const io = req.app.get("io");
         if (io) {
             io.emit("post:comment", { postId: updatedPost._id, comments: updatedPost.comments });
+        }
+
+        if (req.user._id.toString() !== updatedPost.author._id.toString()) {
+            const Notification = require("../models/Notification");
+            await Notification.create({
+                recipient: updatedPost.author._id,
+                sender: req.user._id,
+                type: "comment",
+                post: updatedPost._id,
+                content: "commented on your post"
+            });
+            const { emitToUser } = require("../socket");
+            if (io && emitToUser) {
+                emitToUser(io, updatedPost.author._id, "notification:new", { type: "comment", message: "commented on your post", sender: req.user });
+            }
         }
 
         res.status(200).json({

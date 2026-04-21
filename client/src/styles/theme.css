@@ -1,0 +1,165 @@
+/* ═══════════════════════════════════════════════════════════
+   CampusConnect — Theme Variables
+   Applied via  data-theme="light" | "dark"  on <html>
+   All values transition smoothly thanks to the rule below.
+═══════════════════════════════════════════════════════════ */
+
+/* ── Global transition: every CSS-variable-driven property
+   animates when the theme attribute flips.
+   Keep to 0.35s — fast enough to feel snappy,
+   slow enough to read as intentional.               ── */
+*,
+*::before,
+*::after {
+    transition:
+        background-color 0.35s ease,
+        border-color 0.35s ease,
+        color 0.35s ease,
+        box-shadow 0.35s ease,
+        fill 0.35s ease,
+        stroke 0.35s ease;
+}
+
+/* Exception: don't animate layout or transforms — that would
+   make every hover/focus feel laggy.                       */
+*:where([style*="transform"],
+    [style*="width"],
+    [style*="height"],
+    input[type="range"]) {
+    transition: none;
+}
+
+/* ══════════════════════════════
+   LIGHT MODE (default)
+══════════════════════════════ */
+:root,
+[data-theme="light"] {
+    /* Backgrounds */
+    --bg-page: #F5F2EC;
+    --bg-surface: #FFFFFF;
+    --bg-elevated: #FFFFFF;
+    --bg-subtle: #EDE9E1;
+    --bg-muted: #E4DFD5;
+
+    /* Text */
+    --text-primary: #1A1714;
+    --text-secondary: #6B6560;
+    --text-muted: #9E9890;
+    --text-inverted: #FFFFFF;
+
+    /* Borders */
+    --border: rgba(0, 0, 0, 0.08);
+    --border-strong: rgba(0, 0, 0, 0.14);
+
+    /* Accent — warm terracotta */
+    --accent: #C4602A;
+    --accent-hover: #A85024;
+    --accent-subtle: #F5DFD0;
+    --accent-text: #7A3518;
+
+    /* Semantic */
+    --success: #2E7D55;
+    --success-subtle: #D6F0E3;
+    --warning: #A0660A;
+    --warning-subtle: #FEF0D4;
+    --danger: #C03030;
+    --danger-subtle: #FDDCDC;
+    --info: #1B60A8;
+    --info-subtle: #DDEEFF;
+
+    /* Components */
+    --card-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+    --nav-bg: rgba(255, 255, 255, 0.85);
+    --nav-blur: blur(12px);
+    --toggle-track: #D5D0C8;
+    --toggle-thumb: #FFFFFF;
+    --toggle-icon: #6B6560;
+    --input-bg: #FFFFFF;
+    --input-border: rgba(0, 0, 0, 0.12);
+    --input-focus: #C4602A;
+    --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+}
+
+/* ══════════════════════════════
+   DARK MODE
+══════════════════════════════ */
+[data-theme="dark"] {
+    /* Backgrounds */
+    --bg-page: #111009;
+    --bg-surface: #1A1814;
+    --bg-elevated: #201E1A;
+    --bg-subtle: #252220;
+    --bg-muted: #2C2A26;
+
+    /* Text */
+    --text-primary: #F0EBE3;
+    --text-secondary: #9E9890;
+    --text-muted: #5A5650;
+    --text-inverted: #1A1714;
+
+    /* Borders */
+    --border: rgba(255, 255, 255, 0.07);
+    --border-strong: rgba(255, 255, 255, 0.12);
+
+    /* Accent — slightly lighter for dark bg legibility */
+    --accent: #E07A46;
+    --accent-hover: #F08A56;
+    --accent-subtle: #3D2415;
+    --accent-text: #F0A070;
+
+    /* Semantic */
+    --success: #4CAF7D;
+    --success-subtle: #0D2E1E;
+    --warning: #E09840;
+    --warning-subtle: #2C1E08;
+    --danger: #E06060;
+    --danger-subtle: #2C0E0E;
+    --info: #5B9BD5;
+    --info-subtle: #0A1E35;
+
+    /* Components */
+    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+    --nav-bg: rgba(26, 24, 20, 0.88);
+    --nav-blur: blur(12px);
+    --toggle-track: #3A3630;
+    --toggle-thumb: #F0EBE3;
+    --toggle-icon: #9E9890;
+    --input-bg: #201E1A;
+    --input-border: rgba(255, 255, 255, 0.1);
+    --input-focus: #E07A46;
+    --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+}
+
+/* ══════════════════════════════
+   Global base styles
+══════════════════════════════ */
+html {
+    color-scheme: light dark;
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* Scrollbar (webkit) */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 3px;
+}
+
+/* Focus ring — accessible & themed */
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}

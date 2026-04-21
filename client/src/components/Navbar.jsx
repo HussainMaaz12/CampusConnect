@@ -1,15 +1,71 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import ThemeToggle from "./ThemeToggle";
+import api from "../api/axios";
 
 function Navbar() {
     const { authUser, isAuthenticated, logout } = useAuth();
-    const { isOnline } = useSocket();
+    const { socket, isOnline } = useSocket();
     const location = useLocation();
+    const navigate = useNavigate();
     const isActive = (path) => location.pathname === path;
     const getInitial = (name) => (name || "U").charAt(0).toUpperCase();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const settingsRef = useRef();
+    
+    const [notifOpen, setNotifOpen] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const notifRef = useRef();
+
+    // Fetch initial notifications
+    useEffect(() => {
+        if (isAuthenticated) {
+            api.get("/notifications").then(res => {
+                if (res.data.success) {
+                    setNotifications(res.data.notifications);
+                    setUnreadCount(res.data.count);
+                }
+            }).catch(() => {});
+        }
+    }, [isAuthenticated]);
+
+    // Listen for real-time notifications
+    useEffect(() => {
+        if (!socket) return;
+        const handleNotif = (data) => {
+            setNotifications(prev => [data, ...prev]);
+            setUnreadCount(prev => prev + 1);
+        };
+        socket.on("notification:new", handleNotif);
+        return () => socket.off("notification:new", handleNotif);
+    }, [socket]);
+
+    const handleNotifClick = () => {
+        const toggle = !notifOpen;
+        setNotifOpen(toggle);
+        if (toggle && unreadCount > 0) {
+            api.put("/notifications/read").catch(()=>{});
+            setUnreadCount(0);
+        }
+    };
+
+    // Close dropdowns if clicked outside
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+                setSettingsOpen(false);
+            }
+            if (notifRef.current && !notifRef.current.contains(event.target)) {
+                setNotifOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     return (
         <>
@@ -183,6 +239,59 @@ function Navbar() {
                                             @{authUser?.username || "user"}
                                         </span>
                                     </Link>
+                                
+                                    {/* Chat Notification Shortcut */}
+                                    <Link to="/chat" className="relative nav-logout text-white/50 hover:text-white flex items-center justify-center !p-2" title="Messages">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                                        </svg>
+                                    </Link>
+
+                                    {/* Notification Bell */}
+                                    <div className="relative" ref={notifRef}>
+                                        <button onClick={handleNotifClick} className="relative nav-logout text-white/50 hover:text-white flex items-center justify-center !p-2">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                            </svg>
+                                            {unreadCount > 0 && (
+                                                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 border border-[#0A0A0F] rounded-full animate-pulse"></span>
+                                            )}
+                                        </button>
+                                        
+                                        {notifOpen && (
+                                            <div className="absolute right-0 top-[calc(100%+8px)] w-72 md:w-80 rounded-2xl border border-white/5 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl z-50 animate-in slide-in-from-top-2 overflow-hidden flex flex-col max-h-[70vh]">
+                                                <div className="p-3 border-b border-white/5 font-semibold text-white text-[13px]">Notifications</div>
+                                                <div className="overflow-y-auto no-scrollbar flex-1 p-2">
+                                                    {notifications.length === 0 ? (
+                                                        <p className="text-white/30 text-center py-4 text-xs">No notifications yet.</p>
+                                                    ) : (
+                                                        notifications.map((n, i) => (
+                                                            <div 
+                                                                key={i} 
+                                                                onClick={() => {
+                                                                    setNotifOpen(false);
+                                                                    if (n.sender) {
+                                                                        navigate("/chat", { state: { user: n.sender } });
+                                                                    }
+                                                                }}
+                                                                className="flex gap-3 text-xs p-2 rounded-xl hover:bg-white/5 transition mb-1 text-white/70 items-center cursor-pointer"
+                                                            >
+                                                                {n.sender?.avatar ? (
+                                                                    <img src={n.sender.avatar} className="w-8 h-8 rounded-full flex-shrink-0 object-cover" />
+                                                                ) : (
+                                                                    <div className="w-8 h-8 rounded-full flex-shrink-0 bg-gradient-to-br from-[#6C63FF] to-[#00D4AA] flex items-center justify-center font-bold text-white text-[10px]">{n.sender?.name?.charAt(0) || "U"}</div>
+                                                                )}
+                                                                <div className="flex-1">
+                                                                    <span className="font-semibold text-white">{n.sender?.name}</span> {n.content || n.message}
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    
                                     <button onClick={logout} className="nav-logout">
                                         <span className="hidden sm:inline">Logout</span>
                                         <span className="sm:hidden">
@@ -193,6 +302,28 @@ function Navbar() {
                                             </svg>
                                         </span>
                                     </button>
+
+                                    {/* Settings Dropdown */}
+                                    <div className="relative" ref={settingsRef}>
+                                        <button onClick={() => setSettingsOpen(!settingsOpen)} className="nav-logout text-white/50 hover:text-white flex items-center justify-center !p-2">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                            </svg>
+                                        </button>
+
+                                        {settingsOpen && (
+                                            <div className="absolute right-0 top-[calc(100%+8px)] w-56 rounded-2xl border border-white/5 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl p-2 z-50 animate-in slide-in-from-top-2">
+                                                <div className="flex items-center justify-between p-3 border-b border-white/5 mb-2">
+                                                    <span className="text-white/80 text-[13px] font-semibold">Appearance</span>
+                                                    <ThemeToggle size="sm" showLabel={false} />
+                                                </div>
+                                                <button className="w-full text-left p-3 rounded-xl text-[13px] text-white/50 hover:bg-white/5 hover:text-white transition">Account Settings</button>
+                                                <button className="w-full text-left p-3 rounded-xl text-[13px] text-white/50 hover:bg-white/5 hover:text-white transition">Privacy & Safety</button>
+                                                <button className="w-full text-left p-3 rounded-xl text-[13px] text-white/50 hover:bg-white/5 hover:text-white transition">Notifications</button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </>
                             )}
 

@@ -135,19 +135,25 @@ function UserProfile() {
                                     <p className="text-white/35 text-[13px] mt-2 max-w-lg">{user.bio || "Hey there! I'm on CampusConnect."}</p>
                                 </div>
 
-                                {/* Follow button */}
+                                {/* Follow and Message buttons */}
                                 {!isOwnProfile && (
-                                    <button onClick={handleFollow} disabled={followLoading}
-                                        className="px-6 py-2.5 rounded-full text-sm font-bold transition-all"
-                                        style={{
-                                            background: isFollowing ? "rgba(255,255,255,0.05)" : "linear-gradient(115deg, #6C63FF, #00D4AA)",
-                                            color: isFollowing ? "rgba(255,255,255,0.5)" : "#fff",
-                                            border: isFollowing ? "1px solid rgba(255,255,255,0.08)" : "none",
-                                            boxShadow: isFollowing ? "none" : "0 4px 16px rgba(108,99,255,0.25)",
-                                        }}
-                                    >
-                                        {followLoading ? "…" : isFollowing ? "Following ✓" : "Follow +"}
-                                    </button>
+                                    <div className="flex gap-2">
+                                        <Link to="/chat" state={{ user: user }} 
+                                            className="px-5 py-2.5 rounded-full text-sm font-bold transition-all bg-white/[0.04] text-white/70 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white flex items-center justify-center">
+                                            Message
+                                        </Link>
+                                        <button onClick={handleFollow} disabled={followLoading}
+                                            className="px-6 py-2.5 rounded-full text-sm font-bold transition-all"
+                                            style={{
+                                                background: isFollowing ? "rgba(255,255,255,0.05)" : "linear-gradient(115deg, #6C63FF, #00D4AA)",
+                                                color: isFollowing ? "rgba(255,255,255,0.5)" : "#fff",
+                                                border: isFollowing ? "1px solid rgba(255,255,255,0.08)" : "none",
+                                                boxShadow: isFollowing ? "none" : "0 4px 16px rgba(108,99,255,0.25)",
+                                            }}
+                                        >
+                                            {followLoading ? "…" : isFollowing ? "Following ✓" : "Follow +"}
+                                        </button>
+                                    </div>
                                 )}
                                 {isOwnProfile && (
                                     <Link to="/profile" className="px-5 py-2 rounded-full text-sm font-bold bg-white/[0.04] text-white/40 border border-white/[0.06] hover:bg-white/[0.08] transition">

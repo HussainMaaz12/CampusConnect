@@ -1,0 +1,150 @@
+.theme-toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.theme-toggle-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+    min-width: 30px;
+    text-align: right;
+    user-select: none;
+    transition: color 0.35s ease;
+}
+
+/* ── Button reset + sizing ── */
+.theme-toggle {
+    position: relative;
+    width: 50px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 14px;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Small variant */
+.theme-toggle-wrap--sm .theme-toggle {
+    width: 40px;
+    height: 22px;
+}
+
+.theme-toggle-wrap--sm .theme-toggle__thumb {
+    width: 16px !important;
+    height: 16px !important;
+    top: 3px !important;
+    left: 3px !important;
+}
+
+.theme-toggle-wrap--sm.theme-toggle-wrap .theme-toggle--dark .theme-toggle__thumb {
+    transform: translateX(18px) !important;
+}
+
+.theme-toggle-wrap--sm .theme-toggle-label {
+    font-size: 11px;
+}
+
+/* ── Track ── */
+.theme-toggle__track {
+    position: absolute;
+    inset: 0;
+    background: var(--toggle-track);
+    border-radius: 14px;
+    border: 0.5px solid var(--border);
+    transition:
+        background 0.35s ease,
+        border-color 0.35s ease;
+}
+
+/* ── Background icons (sun left / moon right) ── */
+.theme-toggle__icons {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 7px;
+    pointer-events: none;
+    color: var(--toggle-icon);
+    transition: color 0.35s ease;
+}
+
+/* Show only the relevant icon */
+.theme-toggle__icons> :first-child {
+    /* sun */
+    opacity: 1;
+    transition: opacity 0.25s ease;
+}
+
+.theme-toggle__icons> :last-child {
+    /* moon */
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.theme-toggle--dark .theme-toggle__icons> :first-child {
+    opacity: 0;
+}
+
+.theme-toggle--dark .theme-toggle__icons> :last-child {
+    opacity: 1;
+}
+
+/* ── Sliding thumb ── */
+.theme-toggle__thumb {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 20px;
+    height: 20px;
+    background: var(--toggle-thumb);
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+        transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.35s ease,
+        box-shadow 0.35s ease;
+}
+
+.theme-toggle--dark .theme-toggle__thumb {
+    transform: translateX(22px);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+.theme-toggle__thumb-icon {
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.35s ease;
+}
+
+/* ── Hover / focus states ── */
+.theme-toggle:hover .theme-toggle__track {
+    background: var(--bg-muted);
+}
+
+.theme-toggle:active .theme-toggle__thumb {
+    width: 24px;
+
+}
+
+.theme-toggle--dark:active .theme-toggle__thumb {
+    transform: translateX(18px);
+    width: 24px;
+}
+
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 14px;
+}

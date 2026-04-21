@@ -6,6 +6,7 @@ import Register from "../pages/authpages/register";
 import Feed from "../pages/Feed";
 import Profile from "../pages/Profile";
 import UserProfile from "../pages/UserProfile";
+import Chat from "../pages/Chat";
 import NotFound from "../pages/NotFound";
 
 import ProtectedRoute from "./ProtectedRoute";
@@ -58,6 +59,15 @@ function AppRoutes() {
                     element={
                         <ProtectedRoute>
                             <UserProfile />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/chat"
+                    element={
+                        <ProtectedRoute>
+                            <Chat />
                         </ProtectedRoute>
                     }
                 />

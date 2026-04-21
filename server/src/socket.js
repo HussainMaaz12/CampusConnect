@@ -9,6 +9,15 @@ function getOnlineUserIds() {
     return Array.from(onlineUsers.keys());
 }
 
+function emitToUser(io, userId, event, data) {
+    const sockets = onlineUsers.get(userId.toString());
+    if (sockets) {
+        for (const socketId of sockets) {
+            io.to(socketId).emit(event, data);
+        }
+    }
+}
+
 function initSocket(httpServer) {
     const io = new Server(httpServer, {
         cors: {
@@ -61,6 +70,19 @@ function initSocket(httpServer) {
         // Send current online list to the newly connected client
         socket.emit("users:online", getOnlineUserIds());
 
+        // Typing indicators
+        socket.on("chat:typing", (data) => {
+            if (data.receiverId) {
+                emitToUser(io, data.receiverId, "chat:typing", { senderId: uid });
+            }
+        });
+
+        socket.on("chat:stop_typing", (data) => {
+            if (data.receiverId) {
+                emitToUser(io, data.receiverId, "chat:stop_typing", { senderId: uid });
+            }
+        });
+
         socket.on("disconnect", () => {
             console.log(`💤 User disconnected: ${socket.userData.username}`);
             const userSockets = onlineUsers.get(uid);
@@ -77,4 +99,4 @@ function initSocket(httpServer) {
     return io;
 }
 
-module.exports = { initSocket, getOnlineUserIds };
+module.exports = { initSocket, getOnlineUserIds, emitToUser };

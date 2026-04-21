@@ -4,6 +4,7 @@ import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import Navbar from "../components/Navbar";
+import { SkeletonFeed } from "../components/SkeletonFeedCard";
 
 const feedCSS = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
@@ -268,18 +269,7 @@ function CatBadge({ cat, small }) {
     );
 }
 
-function PostSkeleton() {
-    return (
-        <div className="glass-post p-5">
-            <div className="flex items-center gap-3 mb-4">
-                <div className="skel w-9 h-9 rounded-full" />
-                <div className="flex-1"><div className="skel h-3 w-24 mb-2" /><div className="skel h-2.5 w-16" /></div>
-            </div>
-            <div className="skel h-3 w-full mb-2" /><div className="skel h-3 w-4/5 mb-2" /><div className="skel h-3 w-3/5 mb-4" />
-            <div className="flex gap-3"><div className="skel h-7 w-16 rounded-lg" /><div className="skel h-7 w-16 rounded-lg" /></div>
-        </div>
-    );
-}
+
 
 function MediaGrid({ media }) {
     const [lightbox, setLightbox] = useState(null);
@@ -563,7 +553,7 @@ function Feed() {
 
                             {/* ── Posts ── */}
                             <div className="space-y-4">
-                                {loadingPosts ? <><PostSkeleton/><PostSkeleton/><PostSkeleton/></> :
+                                {loadingPosts ? <SkeletonFeed count={3} /> :
                                  filteredPosts.length === 0 ? (
                                     <div className="glass-post p-10 text-center fade-in">
                                         <p className="text-2xl mb-2">{posts.length === 0 ? "📝" : "🔍"}</p>
