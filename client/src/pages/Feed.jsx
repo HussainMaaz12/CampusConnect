@@ -330,6 +330,8 @@ function Feed() {
     const [filterCategory, setFilterCategory] = useState("All");
     const [suggestions, setSuggestions] = useState([]);
     const [storyModal, setStoryModal] = useState(null);
+    const [activeStoryIndex, setActiveStoryIndex] = useState(0);
+    const [shareModal, setShareModal] = useState(null);
     const mediaInputRef = useRef(null);
 
     const categories = ["General", "Academic", "Events", "Clubs", "Lost & Found", "Hostel", "Confession"];
@@ -396,7 +398,7 @@ function Feed() {
     const handleAddComment = async (id) => { const t = commentInputs[id]; if (!t?.trim()) return; try { setCommentingPostId(id); const r = await api.post(`/posts/${id}/comment`, { text: t }); if (r.data.success) { setCommentInputs(p => ({ ...p, [id]: "" })); await fetchPosts(); } } catch(e) { setError(e.response?.data?.message || "Failed"); } finally { setCommentingPostId(null); } };
     const handleDeletePost = async (id) => { if (!confirm("Delete this post?")) return; try { setDeletingPostId(id); const r = await api.delete(`/posts/${id}`); if (r.data.success) await fetchPosts(); } catch(e) { setError(e.response?.data?.message || "Failed"); } finally { setDeletingPostId(null); } };
     const handleToggleBookmark = async (id) => { try { await api.put(`/posts/${id}/bookmark`); await fetchPosts(); } catch(e) { /* silent */ } };
-    const handleShare = async (id) => { try { await navigator.clipboard.writeText(`${window.location.origin}/feed#${id}`); await api.put(`/posts/${id}/share`); await fetchPosts(); } catch(e) { /* silent */ } };
+    const handleShare = async (post) => { setShareModal(post); try { await api.put(`/posts/${post._id}/share`); fetchPosts(); } catch(e) { /* silent */ } };
     const startEditing = (p) => { setEditingPostId(p._id); setEditContent(p.content); setEditCategory(p.category || "General"); };
     const cancelEditing = () => { setEditingPostId(null); setEditContent(""); };
     const handleSaveEdit = async (id) => { if (!editContent.trim()) return; try { setSavingEdit(true); const r = await api.put(`/posts/${id}`, { content: editContent, category: editCategory }); if (r.data.success) { cancelEditing(); await fetchPosts(); } } catch(e) { setError(e.response?.data?.message || "Failed"); } finally { setSavingEdit(false); } };
@@ -428,7 +430,7 @@ function Feed() {
             <div className="feed-content">
                 <Navbar />
 
-                <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20 sm:pb-6">
                     <div className="flex gap-7">
 
                         {/* ════════════ MAIN FEED COLUMN ════════════ */}
@@ -449,7 +451,7 @@ function Feed() {
                                 <div className="mb-5 fade-in" style={{ animationDelay: '.02s' }}>
                                     <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
                                         {stories.map((group) => (
-                                            <button key={group.author._id} className="flex flex-col items-center gap-1.5 flex-shrink-0" onClick={() => setStoryModal(group)}>
+                                            <button key={group.author._id} className="flex flex-col items-center gap-1.5 flex-shrink-0" onClick={() => { setStoryModal(group); setActiveStoryIndex(0); }}>
                                                 <div className="story-ring" style={{ width: 62, height: 62 }}>
                                                     <div className="story-inner">
                                                         <Avatar name={group.author.name} avatar={group.author.avatar} size={56} />
@@ -631,7 +633,7 @@ function Feed() {
                                                 <button onClick={() => handleToggleBookmark(post._id)} className={`act-btn ${bookmarked ? "bookmarked" : ""}`} title="Bookmark">
                                                     <svg width="13" height="13" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                                                 </button>
-                                                <button onClick={() => handleShare(post._id)} className="act-btn" title="Copy link & share">
+                                                <button onClick={() => handleShare(post)} className="act-btn" title="Share Options">
                                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
                                                     {post.shares > 0 && <span className="tabular-nums">{post.shares}</span>}
                                                 </button>
@@ -793,28 +795,100 @@ function Feed() {
             </div>
 
             {/* Story Modal */}
-            {storyModal && (
-                <div className="lightbox-overlay" onClick={() => setStoryModal(null)}>
-                    <div className="text-center" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center gap-3 mb-4 justify-center">
-                            <Avatar name={storyModal.author.name} avatar={storyModal.author.avatar} size={40} />
-                            <div>
-                                <p className="text-white font-bold text-sm">{storyModal.author.name}</p>
-                                <p className="text-white/40 text-xs">@{storyModal.author.username}</p>
+            {storyModal && (() => {
+                const stories = storyModal.stories;
+                const current = stories[activeStoryIndex];
+                if (!current) return null;
+                const next = (e) => { e.stopPropagation(); if (activeStoryIndex < stories.length - 1) setActiveStoryIndex(p => p + 1); else setStoryModal(null); };
+                const prev = (e) => { e.stopPropagation(); if (activeStoryIndex > 0) setActiveStoryIndex(p => p - 1); };
+                return (
+                    <div className="lightbox-overlay backdrop-blur-md" onClick={() => setStoryModal(null)} style={{ zIndex: 1000 }}>
+                        <div className="relative flex items-center justify-center w-full h-full max-w-md mx-auto" onClick={e => e.stopPropagation()}>
+                            
+                            {/* Prev Click Area */}
+                            <div className="absolute left-0 top-0 bottom-0 w-[40%] z-10 cursor-pointer" onClick={prev} />
+                            {/* Next Click Area */}
+                            <div className="absolute right-0 top-0 bottom-0 w-[60%] z-10 cursor-pointer" onClick={next} />
+
+                            <div className="absolute top-4 left-0 right-0 z-20 px-4 flex gap-1">
+                                {stories.map((s, i) => (
+                                    <div key={i} className="flex-1 h-[3px] rounded-full bg-white/30 overflow-hidden">
+                                        <div className="h-full bg-white" style={{ width: i < activeStoryIndex ? '100%' : i === activeStoryIndex ? '100%' : '0%', transition: 'width 0.1s' }} />
+                                    </div>
+                                ))}
                             </div>
+
+                            <div className="absolute top-8 left-0 right-0 z-20 px-4 flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                    <Avatar name={storyModal.author.name} avatar={storyModal.author.avatar} size={36} />
+                                    <div>
+                                        <p className="text-white font-bold text-[13px] shadow-sm">{storyModal.author.name}</p>
+                                        <p className="text-white/80 text-[11px] shadow-sm">{timeAgo(current.createdAt)}</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setStoryModal(null)} className="text-white/80 p-2 hover:text-white relative z-30">
+                                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                </button>
+                            </div>
+
+                            <div className="relative rounded-[20px] overflow-hidden w-full max-h-[85vh] aspect-[9/16] bg-[#111] mx-2">
+                                {current.media?.length > 0 ? (
+                                    current.media[0].type === "video" ?
+                                        <video src={current.media[0].url} autoPlay loop playsInline className="w-full h-full object-cover" /> :
+                                        <img src={current.media[0].url} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                     <div className="w-full h-full flex items-center justify-center p-8 text-center bg-gradient-to-br from-[#6C63FF] to-[#00D4AA]">
+                                         <p className="text-white text-2xl font-bold font-syne shadow-sm">{current.content}</p>
+                                     </div>
+                                )}
+                                {current.media?.length > 0 && current.content && (
+                                    <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 pt-20 to-transparent">
+                                        <p className="text-white text-[15px]">{current.content}</p>
+                                    </div>
+                                )}
+                            </div>
+
                         </div>
-                        {storyModal.stories.map((s, i) => (
-                            <div key={s._id} className="mb-4">
-                                {s.media?.length > 0 ? (
-                                    s.media[0].type === "video" ?
-                                        <video src={s.media[0].url} controls style={{ maxWidth: "80vw", maxHeight: "60vh", borderRadius: 16 }} /> :
-                                        <img src={s.media[0].url} alt="" style={{ maxWidth: "80vw", maxHeight: "60vh", borderRadius: 16 }} />
-                                ) : null}
-                                <p className="text-white/70 text-sm mt-3 max-w-md mx-auto">{s.content}</p>
-                                <p className="text-white/20 text-xs mt-1">{timeAgo(s.createdAt)}</p>
-                            </div>
-                        ))}
-                        <button onClick={() => setStoryModal(null)} className="mt-4 px-6 py-2 rounded-full bg-white/10 text-white/60 text-sm hover:bg-white/20 transition">Close</button>
+                    </div>
+                );
+            })()}
+
+            {/* Share Modal */}
+            {shareModal && (
+                <div className="lightbox-overlay backdrop-blur-md" style={{ zIndex: 2000 }} onClick={() => setShareModal(null)}>
+                    <div className="bg-[#151520] border border-white/[0.1] rounded-3xl p-6 max-w-[320px] w-full mx-4 shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-white text-lg font-bold mb-5 text-center font-syne">Share Post</h3>
+                        <div className="grid grid-cols-4 gap-3 mb-6">
+                            {/* WhatsApp */}
+                            <a href={`https://wa.me/?text=Check out this post on CampusConnect: ${encodeURIComponent(`${window.location.origin}/feed#${shareModal._id}`)}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group relative z-10">
+                                <div className="w-12 h-12 rounded-full bg-[#25D366] flex flex-col items-center justify-center text-white group-hover:scale-110 transition duration-300 shadow-lg shadow-[#25D366]/20">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.82 9.82 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                                </div>
+                                <span className="text-white/60 text-[10px] font-medium">WhatsApp</span>
+                            </a>
+                            {/* Twitter */}
+                            <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(`${window.location.origin}/feed#${shareModal._id}`)}&text=${encodeURIComponent("Check this out on CampusConnect!")}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group relative z-10">
+                                <div className="w-12 h-12 rounded-full bg-black border border-white/10 flex flex-col items-center justify-center text-white group-hover:scale-110 transition duration-300 shadow-lg shadow-black/40">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                </div>
+                                <span className="text-white/60 text-[10px] font-medium">X</span>
+                            </a>
+                            {/* Email */}
+                            <a href={`mailto:?subject=CampusConnect Post&body=Check out this post: ${encodeURIComponent(`${window.location.origin}/feed#${shareModal._id}`)}`} className="flex flex-col items-center gap-2 group relative z-10">
+                                <div className="w-12 h-12 rounded-full bg-[#EA4335] flex items-center justify-center text-white group-hover:scale-110 transition duration-300 shadow-lg shadow-[#EA4335]/20">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                </div>
+                                <span className="text-white/60 text-[10px] font-medium">Email</span>
+                            </a>
+                            {/* Copy Link */}
+                            <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/feed#${shareModal._id}`); setShareModal(null); }} className="flex flex-col items-center gap-2 group relative z-10">
+                                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white group-hover:scale-110 transition duration-300 shadow-lg shadow-white/5">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m-6 12h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z"/></svg>
+                                </div>
+                                <span className="text-white/60 text-[10px] font-medium">Copy</span>
+                            </button>
+                        </div>
+                        <button className="w-full py-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] text-white/80 transition font-bold text-[13px] relative z-10" onClick={() => setShareModal(null)}>Cancel</button>
                     </div>
                 </div>
             )}

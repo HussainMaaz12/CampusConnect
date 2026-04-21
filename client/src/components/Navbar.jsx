@@ -29,6 +29,20 @@ function Navbar() {
                     background: linear-gradient(90deg, transparent 5%, rgba(108,99,255,0.5) 30%, rgba(0,212,170,0.4) 50%, rgba(255,107,107,0.3) 70%, transparent 95%);
                     opacity: 0.6;
                 }
+                @media (min-width: 640px) {
+                    .nav-glass {
+                        border-top: none;
+                        border-bottom: 1px solid rgba(255,255,255,0.04);
+                    }
+                    .nav-glow {
+                        top: auto;
+                        bottom: -1px;
+                    }
+                    .nav-link.active::after {
+                        top: auto;
+                        bottom: -13px;
+                    }
+                }
                 .nav-link {
                     display: flex; align-items: center; gap: 8px;
                     padding: 10px 18px; border-radius: 14px;
@@ -101,7 +115,7 @@ function Navbar() {
                     @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
                 }
             `}} />
-            <header className="navbar-root fixed bottom-0 w-full z-50 nav-glass">
+            <header className="navbar-root fixed bottom-0 sm:sticky sm:bottom-auto sm:top-0 w-full z-50 nav-glass">
                 <div className="relative">
                     <div className="nav-glow" />
                     <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3">
