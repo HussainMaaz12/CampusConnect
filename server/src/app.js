@@ -17,10 +17,18 @@ const app = express();
 
 const setupMasterAccount = async () => {
     try {
+        const crypto = require('crypto');
         
-        const masterEmail = "[REDACTED_EMAIL]";
-        const masterPassword = "[REDACTED_PASSWORD]";
-        const masterUsername = "[REDACTED_USERNAME]";
+        const masterEmail = process.env.MASTER_DEV_EMAIL || "admin@campusconnect.local";
+        const masterUsername = process.env.MASTER_DEV_USERNAME || "admin";
+        
+        let masterPassword = process.env.MASTER_DEV_PASSWORD;
+        let isGeneratedPassword = false;
+
+        if (!masterPassword) {
+            masterPassword = crypto.randomBytes(12).toString('hex');
+            isGeneratedPassword = true;
+        }
 
         
         const existingMaster = await User.findOne({ email: masterEmail });
@@ -39,7 +47,14 @@ const setupMasterAccount = async () => {
                 canPost: true
             });
             console.log("Master Developer account generated successfully!");
+            if (isGeneratedPassword) {
+                console.log("=================================================");
+                console.log(`ATTENTION: Auto-generated Master Password: ${masterPassword}`);
+                console.log("Please save this password securely. It will not be shown again.");
+                console.log("=================================================");
+            }
         } else {
+
             
             existingMaster.role = "admin";
             existingMaster.canPost = true;
