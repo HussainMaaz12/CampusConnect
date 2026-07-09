@@ -251,13 +251,13 @@ function Avatar({ name, avatar, size = 36, className = "", online = false }) {
 }
 
 const catCfg = {
-    General:       { emoji: "💬", c: "#a1a1aa", bg: "rgba(161,161,170,0.08)", b: "rgba(161,161,170,0.12)" },
-    Academic:      { emoji: "📚", c: "#60a5fa", bg: "rgba(96,165,250,0.08)",  b: "rgba(96,165,250,0.12)" },
-    Events:        { emoji: "🎉", c: "#c084fc", bg: "rgba(192,132,252,0.08)", b: "rgba(192,132,252,0.12)" },
-    Clubs:         { emoji: "🏛️", c: "#4ade80", bg: "rgba(74,222,128,0.08)",  b: "rgba(74,222,128,0.12)" },
-    "Lost & Found":{ emoji: "🔍", c: "#facc15", bg: "rgba(250,204,21,0.08)",  b: "rgba(250,204,21,0.12)" },
-    Hostel:        { emoji: "🏠", c: "#22d3ee", bg: "rgba(34,211,238,0.08)",  b: "rgba(34,211,238,0.12)" },
-    Confession:    { emoji: "🤫", c: "#f472b6", bg: "rgba(244,114,182,0.08)", b: "rgba(244,114,182,0.12)" },
+    General: { emoji: "💬", c: "#a1a1aa", bg: "rgba(161,161,170,0.08)", b: "rgba(161,161,170,0.12)" },
+    Academic: { emoji: "📚", c: "#60a5fa", bg: "rgba(96,165,250,0.08)", b: "rgba(96,165,250,0.12)" },
+    Events: { emoji: "🎉", c: "#c084fc", bg: "rgba(192,132,252,0.08)", b: "rgba(192,132,252,0.12)" },
+    Clubs: { emoji: "🏛️", c: "#4ade80", bg: "rgba(74,222,128,0.08)", b: "rgba(74,222,128,0.12)" },
+    "Lost & Found": { emoji: "🔍", c: "#facc15", bg: "rgba(250,204,21,0.08)", b: "rgba(250,204,21,0.12)" },
+    Hostel: { emoji: "🏠", c: "#22d3ee", bg: "rgba(34,211,238,0.08)", b: "rgba(34,211,238,0.12)" },
+    Confession: { emoji: "🤫", c: "#f472b6", bg: "rgba(244,114,182,0.08)", b: "rgba(244,114,182,0.12)" },
 };
 
 function CatBadge({ cat, small }) {
@@ -322,6 +322,9 @@ function Feed() {
     const [storyModal, setStoryModal] = useState(null);
     const [activeStoryIndex, setActiveStoryIndex] = useState(0);
     const [shareModal, setShareModal] = useState(null);
+    const [reportModal, setReportModal] = useState(null);
+    const [reportReason, setReportReason] = useState("");
+    const [reportingPost, setReportingPost] = useState(false);
     const mediaInputRef = useRef(null);
 
     const categories = ["General", "Academic", "Events", "Clubs", "Lost & Found", "Hostel", "Confession"];
@@ -346,9 +349,9 @@ function Feed() {
     const totalLikes = useMemo(() => posts.reduce((s, p) => s + (p.likes?.length || 0), 0), [posts]);
     const totalComments = useMemo(() => posts.reduce((s, p) => s + (p.comments?.length || 0), 0), [posts]);
 
-    const fetchPosts = async () => { try { setLoadingPosts(true); const r = await api.get("/posts"); if (r.data.success) setPosts(r.data.posts); } catch(e) { setError("Failed to load posts"); } finally { setLoadingPosts(false); } };
-    const fetchStories = async () => { try { const r = await api.get("/posts/stories"); if (r.data.success) setStories(r.data.storyGroups || []); } catch(e) { /* silent */ } };
-    const fetchSuggestions = async () => { try { const r = await api.get("/auth/suggestions"); if (r.data.success) setSuggestions(r.data.users || []); } catch(e) { /* silent */ } };
+    const fetchPosts = async () => { try { setLoadingPosts(true); const r = await api.get("/posts"); if (r.data.success) setPosts(r.data.posts); } catch (e) { setError("Failed to load posts"); } finally { setLoadingPosts(false); } };
+    const fetchStories = async () => { try { const r = await api.get("/posts/stories"); if (r.data.success) setStories(r.data.storyGroups || []); } catch (e) { /* silent */ } };
+    const fetchSuggestions = async () => { try { const r = await api.get("/auth/suggestions"); if (r.data.success) setSuggestions(r.data.users || []); } catch (e) { /* silent */ } };
 
     const handleMediaSelect = (e) => {
         const files = Array.from(e.target.files || []);
@@ -380,23 +383,44 @@ function Feed() {
             if (mediaFiles.length > 0) { payload.mediaFiles = mediaFiles.map(f => ({ data: f.data, type: f.type })); }
             const r = await api.post("/posts", payload);
             if (r.data.success) { setPostContent(""); setPostCategory("General"); setMediaFiles([]); setPostType("post"); await fetchPosts(); if (postType === "story") await fetchStories(); }
-        } catch(e) { setError(e.response?.data?.message || "Failed to create post"); }
+        } catch (e) { setError(e.response?.data?.message || "Failed to create post"); }
         finally { setCreatingPost(false); }
     };
 
-    const handleToggleLike = async (id) => { try { setLikingPostId(id); const r = await api.put(`/posts/${id}/like`); if (r.data.success) await fetchPosts(); } catch(e) { setError(e.response?.data?.message || "Failed"); } finally { setLikingPostId(null); } };
-    const handleAddComment = async (id) => { const t = commentInputs[id]; if (!t?.trim()) return; try { setCommentingPostId(id); const r = await api.post(`/posts/${id}/comment`, { text: t }); if (r.data.success) { setCommentInputs(p => ({ ...p, [id]: "" })); await fetchPosts(); } } catch(e) { setError(e.response?.data?.message || "Failed"); } finally { setCommentingPostId(null); } };
-    const handleDeletePost = async (id) => { if (!confirm("Delete this post?")) return; try { setDeletingPostId(id); const r = await api.delete(`/posts/${id}`); if (r.data.success) await fetchPosts(); } catch(e) { setError(e.response?.data?.message || "Failed"); } finally { setDeletingPostId(null); } };
-    const handleToggleBookmark = async (id) => { try { await api.put(`/posts/${id}/bookmark`); await fetchPosts(); } catch(e) { /* silent */ } };
-    const handleShare = async (post) => { setShareModal(post); try { await api.put(`/posts/${post._id}/share`); fetchPosts(); } catch(e) { /* silent */ } };
+    const handleToggleLike = async (id) => { try { setLikingPostId(id); const r = await api.put(`/posts/${id}/like`); if (r.data.success) await fetchPosts(); } catch (e) { setError(e.response?.data?.message || "Failed"); } finally { setLikingPostId(null); } };
+    const handleAddComment = async (id) => { const t = commentInputs[id]; if (!t?.trim()) return; try { setCommentingPostId(id); const r = await api.post(`/posts/${id}/comment`, { text: t }); if (r.data.success) { setCommentInputs(p => ({ ...p, [id]: "" })); await fetchPosts(); } } catch (e) { setError(e.response?.data?.message || "Failed"); } finally { setCommentingPostId(null); } };
+    const handleDeletePost = async (id) => { if (!confirm("Delete this post?")) return; try { setDeletingPostId(id); const r = await api.delete(`/posts/${id}`); if (r.data.success) await fetchPosts(); } catch (e) { setError(e.response?.data?.message || "Failed"); } finally { setDeletingPostId(null); } };
+    const handleToggleBookmark = async (id) => { try { await api.put(`/posts/${id}/bookmark`); await fetchPosts(); } catch (e) { /* silent */ } };
+    const handleShare = async (post) => { setShareModal(post); try { await api.put(`/posts/${post._id}/share`); fetchPosts(); } catch (e) { /* silent */ } };
     const startEditing = (p) => { setEditingPostId(p._id); setEditContent(p.content); setEditCategory(p.category || "General"); };
     const cancelEditing = () => { setEditingPostId(null); setEditContent(""); };
-    const handleSaveEdit = async (id) => { if (!editContent.trim()) return; try { setSavingEdit(true); const r = await api.put(`/posts/${id}`, { content: editContent, category: editCategory }); if (r.data.success) { cancelEditing(); await fetchPosts(); } } catch(e) { setError(e.response?.data?.message || "Failed"); } finally { setSavingEdit(false); } };
+    const handleSaveEdit = async (id) => { if (!editContent.trim()) return; try { setSavingEdit(true); const r = await api.put(`/posts/${id}`, { content: editContent, category: editCategory }); if (r.data.success) { cancelEditing(); await fetchPosts(); } } catch (e) { setError(e.response?.data?.message || "Failed"); } finally { setSavingEdit(false); } };
     const isLiked = (p) => p.likes?.some(l => l === authUser?._id);
     const isBookmarked = (p) => p.bookmarks?.some(b => b === authUser?._id);
     const toggleComments = (id) => setExpandedComments(p => ({ ...p, [id]: !p[id] }));
 
-    // Real-time listeners
+    const handleReportPost = async () => {
+        if (!reportReason?.trim()) return;
+        try {
+            setReportingPost(true);
+            const r = await api.post('/report', {
+                targetType: 'Post',
+                targetId: reportModal._id,
+                reason: reportReason.trim()
+            });
+            if (r.data.success) {
+                setReportModal(null);
+                setReportReason("");
+                alert("Report submitted successfully to the admin queue. Thank you.");
+            }
+        } catch (e) {
+            alert(e.response?.data?.message || "Failed to submit report");
+        } finally {
+            setReportingPost(false);
+        }
+    };
+
+
     useEffect(() => {
         if (!socket) return;
         const handleNewPost = () => { fetchPosts(); fetchStories(); };
@@ -423,10 +447,10 @@ function Feed() {
                 <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20 sm:pb-6">
                     <div className="flex gap-7">
 
-                        
+
                         <div className="flex-1 min-w-0">
 
-                            
+
                             <div className="mb-6 fade-in">
                                 <h1 className="text-[1.7rem] sm:text-[2rem] font-extrabold leading-tight mb-1">
                                     <span className="grad-text">Campus Feed</span> ✨
@@ -436,7 +460,7 @@ function Feed() {
                                 </p>
                             </div>
 
-                            
+
                             {stories.length > 0 && (
                                 <div className="mb-5 fade-in" style={{ animationDelay: '.02s' }}>
                                     <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
@@ -454,7 +478,7 @@ function Feed() {
                                 </div>
                             )}
 
-                            
+
                             {error && (
                                 <div className="err-shake mb-4 rounded-2xl border border-red-500/15 bg-red-500/6 px-4 py-3 flex items-center gap-2.5">
                                     <span className="text-red-400 text-sm">⚠</span>
@@ -463,7 +487,7 @@ function Feed() {
                                 </div>
                             )}
 
-                            
+
                             {authUser?.canPost || authUser?.role === 'admin' ? (
                                 <div className="glass-compose p-5 mb-5 fade-in" style={{ animationDelay: '.04s' }}>
                                     <div className="flex gap-3">
@@ -480,7 +504,7 @@ function Feed() {
                                                     maxLength={2000}
                                                 />
 
-                                                
+
                                                 {mediaFiles.length > 0 && (
                                                     <div className="media-preview">
                                                         {mediaFiles.map((f, i) => (
@@ -498,13 +522,13 @@ function Feed() {
 
                                                 <div className="flex items-center justify-between pt-3 border-t border-white/[0.04]">
                                                     <div className="flex items-center gap-2">
-                                                        
+
                                                         <button type="button" onClick={() => mediaInputRef.current?.click()} className="p-2 rounded-lg text-white/25 hover:text-white/60 hover:bg-white/[0.04] transition" title="Add photo/video">
-                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
                                                         </button>
                                                         <input ref={mediaInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleMediaSelect} />
 
-                                                        
+
                                                         <button type="button" onClick={() => setPostType(postType === "post" ? "story" : "post")}
                                                             className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition"
                                                             style={{
@@ -524,7 +548,7 @@ function Feed() {
                                                         )}
                                                     </div>
                                                     <button type="submit" className="cta-btn" disabled={creatingPost || (!postContent.trim() && mediaFiles.length === 0)}>
-                                                        {creatingPost ? <><span className="f-spinner"/>Posting…</> : postType === "story" ? "Share Story →" : "Post →"}
+                                                        {creatingPost ? <><span className="f-spinner" />Posting…</> : postType === "story" ? "Share Story →" : "Post →"}
                                                     </button>
                                                 </div>
                                             </form>
@@ -541,10 +565,10 @@ function Feed() {
                                 </div>
                             )}
 
-                            
+
                             <div className="mb-5 fade-in" style={{ animationDelay: '.08s' }}>
                                 <div className="search-wrap flex items-center px-3.5 gap-2 mb-3">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
                                     <input type="text" placeholder="Search posts, people…" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                                         className="bg-transparent border-none outline-none flex-1 py-2.5 text-[12px] text-white/70 placeholder:text-white/18" style={{ fontFamily: "'DM Sans'" }} />
                                     {searchQuery && <button onClick={() => setSearchQuery("")} className="text-white/15 hover:text-white/40 text-[10px]">✕</button>}
@@ -561,126 +585,131 @@ function Feed() {
                                 )}
                             </div>
 
-                            
+
                             <div className="space-y-4">
                                 {loadingPosts ? <SkeletonFeed count={3} /> :
-                                 filteredPosts.length === 0 ? (
-                                    <div className="glass-post p-10 text-center fade-in">
-                                        <p className="text-2xl mb-2">{posts.length === 0 ? "📝" : "🔍"}</p>
-                                        <p className="text-white/30 text-[13px] font-medium">{posts.length === 0 ? "No posts yet — be the first!" : "No matches found."}</p>
-                                    </div>
-                                 ) : filteredPosts.map((post, idx) => {
-                                    const liked = isLiked(post), bookmarked = isBookmarked(post), editing = editingPostId === post._id, owner = authUser?._id === post.author?._id;
-                                    const cmtOpen = expandedComments[post._id], cmtCount = post.comments?.length || 0, likeCount = post.likes?.length || 0;
+                                    filteredPosts.length === 0 ? (
+                                        <div className="glass-post p-10 text-center fade-in">
+                                            <p className="text-2xl mb-2">{posts.length === 0 ? "📝" : "🔍"}</p>
+                                            <p className="text-white/30 text-[13px] font-medium">{posts.length === 0 ? "No posts yet — be the first!" : "No matches found."}</p>
+                                        </div>
+                                    ) : filteredPosts.map((post, idx) => {
+                                        const liked = isLiked(post), bookmarked = isBookmarked(post), editing = editingPostId === post._id, owner = authUser?._id === post.author?._id;
+                                        const cmtOpen = expandedComments[post._id], cmtCount = post.comments?.length || 0, likeCount = post.likes?.length || 0;
 
-                                    return (
-                                        <div key={post._id} className={`glass-post p-5 fade-in ${editing ? "!border-[#6C63FF]/20" : ""}`} style={{ animationDelay: `${Math.min(idx * 0.03, 0.25)}s` }}>
-                                            
-                                            <div className="flex items-start justify-between gap-3 mb-2.5">
-                                                <div className="flex items-center gap-2.5">
-                                                    <Link to={`/user/${post.author?.username}`}>
-                                                        <Avatar name={post.author?.name} avatar={post.author?.avatar} size={36} online={isOnline(post.author?._id)} />
-                                                    </Link>
-                                                    <div>
-                                                        <div className="flex items-center gap-2 flex-wrap">
-                                                            <Link to={`/user/${post.author?.username}`} className="text-white/80 text-[13px] font-semibold hover:text-white transition">{post.author?.name || "Unknown"}</Link>
-                                                            {!editing && post.category && <CatBadge cat={post.category} small />}
-                                                        </div>
-                                                        <p className="text-white/25 text-[11px]">@{post.author?.username || "unknown"} · {timeAgo(post.createdAt)}</p>
-                                                    </div>
-                                                </div>
-                                                {owner && !editing && (
-                                                    <div className="flex gap-0.5">
-                                                        <button onClick={() => startEditing(post)} className="p-1.5 rounded-lg text-white/15 hover:text-[#6C63FF] hover:bg-[#6C63FF]/6 transition" title="Edit">
-                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                                        </button>
-                                                        <button onClick={() => handleDeletePost(post._id)} disabled={deletingPostId === post._id} className="p-1.5 rounded-lg text-white/15 hover:text-red-400 hover:bg-red-500/6 disabled:opacity-30 transition" title="Delete">
-                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
+                                        return (
+                                            <div key={post._id} className={`glass-post p-5 fade-in ${editing ? "!border-[#6C63FF]/20" : ""}`} style={{ animationDelay: `${Math.min(idx * 0.03, 0.25)}s` }}>
 
-                                            
-                                            {editing ? (
-                                                <div className="mb-3 space-y-2.5">
-                                                    <textarea value={editContent} onChange={e => setEditContent(e.target.value)} rows="3" className="f-input" />
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        <select value={editCategory} onChange={e => setEditCategory(e.target.value)} className="f-select !py-1.5">{categories.map(c => <option key={c} value={c}>{catCfg[c]?.emoji} {c}</option>)}</select>
-                                                        <div className="flex gap-1.5 ml-auto">
-                                                            <button onClick={() => handleSaveEdit(post._id)} disabled={savingEdit} className="cta-btn !py-1.5 !px-3.5 !text-[11px]">{savingEdit ? "Saving…" : "Save"}</button>
-                                                            <button onClick={cancelEditing} className="px-3.5 py-1.5 rounded-xl text-[11px] font-medium text-white/30 bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] transition">Cancel</button>
+                                                <div className="flex items-start justify-between gap-3 mb-2.5">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <Link to={`/user/${post.author?.username}`}>
+                                                            <Avatar name={post.author?.name} avatar={post.author?.avatar} size={36} online={isOnline(post.author?._id)} />
+                                                        </Link>
+                                                        <div>
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                <Link to={`/user/${post.author?.username}`} className="text-white/80 text-[13px] font-semibold hover:text-white transition">{post.author?.name || "Unknown"}</Link>
+                                                                {!editing && post.category && <CatBadge cat={post.category} small />}
+                                                            </div>
+                                                            <p className="text-white/25 text-[11px]">@{post.author?.username || "unknown"} · {timeAgo(post.createdAt)}</p>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ) : (
-                                                <p className="text-white/65 text-[14px] leading-[1.65] mb-3 whitespace-pre-wrap">{post.content}</p>
-                                            )}
-
-                                            
-                                            {!editing && <MediaGrid media={post.media} />}
-
-                                            
-                                            <div className="flex items-center gap-1 pt-2.5 border-t border-white/[0.03]">
-                                                <button onClick={() => handleToggleLike(post._id)} disabled={likingPostId === post._id} className={`act-btn ${liked ? "liked" : ""}`}>
-                                                    <span className={liked && likingPostId !== post._id ? "heart-pop" : ""}>{liked ? "❤️" : "🤍"}</span>
-                                                    <span className="tabular-nums">{likeCount}</span>
-                                                </button>
-                                                <button onClick={() => toggleComments(post._id)} className={`act-btn ${cmtOpen ? "!text-white/50" : ""}`}>
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                                                    <span className="tabular-nums">{cmtCount}</span>
-                                                </button>
-                                                <button onClick={() => handleToggleBookmark(post._id)} className={`act-btn ${bookmarked ? "bookmarked" : ""}`} title="Bookmark">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                                                </button>
-                                                <button onClick={() => handleShare(post)} className="act-btn" title="Share Options">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-                                                    {post.shares > 0 && <span className="tabular-nums">{post.shares}</span>}
-                                                </button>
-                                                <span className="text-white/8 text-[9px] ml-auto hidden sm:inline tabular-nums">
-                                                    {new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                                                </span>
-                                            </div>
-
-                                            
-                                            <div className={`cmts-wrap ${cmtOpen ? "open" : ""}`}>
-                                                <div className="pt-3 mt-2.5 border-t border-white/[0.03]">
-                                                    <div className="flex gap-2.5 mb-3">
-                                                        <Avatar name={authUser?.name} avatar={authUser?.avatar} size={26} />
-                                                        <div className="flex-1 flex gap-1.5">
-                                                            <input type="text" placeholder="Reply…" value={commentInputs[post._id] || ""}
-                                                                onChange={e => setCommentInputs(p => ({ ...p, [post._id]: e.target.value }))}
-                                                                onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAddComment(post._id); } }}
-                                                                className="f-input !py-2 !px-3 !text-[12px] !rounded-xl" />
-                                                            <button onClick={() => handleAddComment(post._id)} disabled={commentingPostId === post._id || !commentInputs[post._id]?.trim()}
-                                                                className="flex-shrink-0 px-2.5 py-2 rounded-xl text-[11px] font-semibold bg-white/[0.04] text-white/25 hover:bg-[#6C63FF]/10 hover:text-[#6C63FF] disabled:opacity-30 border border-white/[0.04] transition">
-                                                                {commentingPostId === post._id ? "…" : "→"}
+                                                    {owner && !editing && (
+                                                        <div className="flex gap-0.5">
+                                                            <button onClick={() => startEditing(post)} className="p-1.5 rounded-lg text-white/15 hover:text-[#6C63FF] hover:bg-[#6C63FF]/6 transition" title="Edit">
+                                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                                                            </button>
+                                                            <button onClick={() => handleDeletePost(post._id)} disabled={deletingPostId === post._id} className="p-1.5 rounded-lg text-white/15 hover:text-red-400 hover:bg-red-500/6 disabled:opacity-30 transition" title="Delete">
+                                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
                                                             </button>
                                                         </div>
-                                                    </div>
-                                                    <div className="space-y-1.5">
-                                                        {cmtCount > 0 ? post.comments.map((c, i) => (
-                                                            <div key={c._id || i} className="cmt-card flex gap-2.5">
-                                                                <Avatar name={c.user?.name} avatar={c.user?.avatar} size={22} />
-                                                                <div className="min-w-0">
-                                                                    <p className="text-[11px]"><span className="text-white/50 font-medium">{c.user?.name || "Unknown"}</span> <span className="text-white/15">@{c.user?.username}</span></p>
-                                                                    <p className="text-white/45 text-[12px] leading-snug">{c.text}</p>
-                                                                </div>
+                                                    )}
+                                                </div>
+
+
+                                                {editing ? (
+                                                    <div className="mb-3 space-y-2.5">
+                                                        <textarea value={editContent} onChange={e => setEditContent(e.target.value)} rows="3" className="f-input" />
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <select value={editCategory} onChange={e => setEditCategory(e.target.value)} className="f-select !py-1.5">{categories.map(c => <option key={c} value={c}>{catCfg[c]?.emoji} {c}</option>)}</select>
+                                                            <div className="flex gap-1.5 ml-auto">
+                                                                <button onClick={() => handleSaveEdit(post._id)} disabled={savingEdit} className="cta-btn !py-1.5 !px-3.5 !text-[11px]">{savingEdit ? "Saving…" : "Save"}</button>
+                                                                <button onClick={cancelEditing} className="px-3.5 py-1.5 rounded-xl text-[11px] font-medium text-white/30 bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] transition">Cancel</button>
                                                             </div>
-                                                        )) : <p className="text-white/12 text-[11px] text-center py-1.5">No comments yet</p>}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-white/65 text-[14px] leading-[1.65] mb-3 whitespace-pre-wrap">{post.content}</p>
+                                                )}
+
+
+                                                {!editing && <MediaGrid media={post.media} />}
+
+
+                                                <div className="flex items-center gap-1 pt-2.5 border-t border-white/[0.03]">
+                                                    <button onClick={() => handleToggleLike(post._id)} disabled={likingPostId === post._id} className={`act-btn ${liked ? "liked" : ""}`}>
+                                                        <span className={liked && likingPostId !== post._id ? "heart-pop" : ""}>{liked ? "❤️" : "🤍"}</span>
+                                                        <span className="tabular-nums">{likeCount}</span>
+                                                    </button>
+                                                    <button onClick={() => toggleComments(post._id)} className={`act-btn ${cmtOpen ? "!text-white/50" : ""}`}>
+                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                                                        <span className="tabular-nums">{cmtCount}</span>
+                                                    </button>
+                                                    <button onClick={() => handleToggleBookmark(post._id)} className={`act-btn ${bookmarked ? "bookmarked" : ""}`} title="Bookmark">
+                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+                                                    </button>
+                                                    <button onClick={() => handleShare(post)} className="act-btn" title="Share Options">
+                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg>
+                                                        {post.shares > 0 && <span className="tabular-nums">{post.shares}</span>}
+                                                    </button>
+                                                    {!owner && (
+                                                        <button onClick={() => setReportModal(post)} className="act-btn ml-1 hover:!text-orange-400 group" title="Report Post">
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:scale-110 transition"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                                        </button>
+                                                    )}
+                                                    <span className="text-white/8 text-[9px] ml-auto hidden sm:inline tabular-nums">
+                                                        {new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                                    </span>
+                                                </div>
+
+
+                                                <div className={`cmts-wrap ${cmtOpen ? "open" : ""}`}>
+                                                    <div className="pt-3 mt-2.5 border-t border-white/[0.03]">
+                                                        <div className="flex gap-2.5 mb-3">
+                                                            <Avatar name={authUser?.name} avatar={authUser?.avatar} size={26} />
+                                                            <div className="flex-1 flex gap-1.5">
+                                                                <input type="text" placeholder="Reply…" value={commentInputs[post._id] || ""}
+                                                                    onChange={e => setCommentInputs(p => ({ ...p, [post._id]: e.target.value }))}
+                                                                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAddComment(post._id); } }}
+                                                                    className="f-input !py-2 !px-3 !text-[12px] !rounded-xl" />
+                                                                <button onClick={() => handleAddComment(post._id)} disabled={commentingPostId === post._id || !commentInputs[post._id]?.trim()}
+                                                                    className="flex-shrink-0 px-2.5 py-2 rounded-xl text-[11px] font-semibold bg-white/[0.04] text-white/25 hover:bg-[#6C63FF]/10 hover:text-[#6C63FF] disabled:opacity-30 border border-white/[0.04] transition">
+                                                                    {commentingPostId === post._id ? "…" : "→"}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            {cmtCount > 0 ? post.comments.map((c, i) => (
+                                                                <div key={c._id || i} className="cmt-card flex gap-2.5">
+                                                                    <Avatar name={c.user?.name} avatar={c.user?.avatar} size={22} />
+                                                                    <div className="min-w-0">
+                                                                        <p className="text-[11px]"><span className="text-white/50 font-medium">{c.user?.name || "Unknown"}</span> <span className="text-white/15">@{c.user?.username}</span></p>
+                                                                        <p className="text-white/45 text-[12px] leading-snug">{c.text}</p>
+                                                                    </div>
+                                                                </div>
+                                                            )) : <p className="text-white/12 text-[11px] text-center py-1.5">No comments yet</p>}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })}
                             </div>
                         </div>
 
-                        
+
                         <aside className="hidden lg:block w-[340px] flex-shrink-0 space-y-5 sticky top-[72px] self-start max-h-[calc(100vh-90px)] overflow-y-auto no-scrollbar">
 
-                            
+
                             {onlineUsers.length > 0 && (
                                 <div className="glass-sidebar p-5 fade-in" style={{ animationDelay: '.08s' }}>
                                     <div className="flex items-center gap-2 mb-4">
@@ -698,11 +727,11 @@ function Feed() {
                                 </div>
                             )}
 
-                            
+
                             <div className="glass-sidebar p-6 fade-in" style={{ animationDelay: '.1s' }}>
                                 <div className="flex items-center gap-2 mb-5">
                                     <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#6C63FF]/20 to-[#00D4AA]/10 flex items-center justify-center">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6C63FF" strokeWidth="2.5" strokeLinecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6C63FF" strokeWidth="2.5" strokeLinecap="round"><path d="M18 20V10M12 20V4M6 20v-6" /></svg>
                                     </div>
                                     <h3 className="text-white/60 text-[12px] font-bold tracking-wider uppercase">Campus Pulse</h3>
                                 </div>
@@ -722,7 +751,7 @@ function Feed() {
                                 </div>
                             </div>
 
-                            
+
                             {suggestions.length > 0 && (
                                 <div className="glass-sidebar p-6 fade-in" style={{ animationDelay: '.15s' }}>
                                     <h3 className="text-white/60 text-[12px] font-bold tracking-wider uppercase mb-4">Who to Follow</h3>
@@ -745,7 +774,7 @@ function Feed() {
                                 </div>
                             )}
 
-                            
+
                             <div className="glass-sidebar p-6 fade-in" style={{ animationDelay: '.2s' }}>
                                 <h3 className="text-white/60 text-[12px] font-bold tracking-wider uppercase mb-4">🔥 Trending</h3>
                                 <div className="space-y-1">
@@ -761,7 +790,7 @@ function Feed() {
                                 </div>
                             </div>
 
-                            
+
                             <div className="fade-in" style={{ animationDelay: '.25s' }}>
                                 <div className="rounded-2xl p-[1px] bg-gradient-to-br from-[#6C63FF]/20 via-[#A78BFA]/10 to-[#00D4AA]/10">
                                     <div className="glass-sidebar !border-0 p-5">
@@ -780,7 +809,7 @@ function Feed() {
                                 </div>
                             </div>
 
-                            
+
                             <div className="px-4 pt-2 pb-4 fade-in" style={{ animationDelay: '.3s' }}>
                                 <div className="flex items-center gap-1.5 mb-2">
                                     <div className="w-4 h-4 rounded flex items-center justify-center text-[7px] font-bold text-white" style={{ background: "linear-gradient(135deg, #6C63FF, #00D4AA)" }}>C</div>
@@ -794,7 +823,7 @@ function Feed() {
                 </div>
             </div>
 
-            
+
             {storyModal && (() => {
                 const stories = storyModal.stories;
                 const current = stories[activeStoryIndex];
@@ -804,10 +833,10 @@ function Feed() {
                 return (
                     <div className="lightbox-overlay backdrop-blur-md" onClick={() => setStoryModal(null)} style={{ zIndex: 1000 }}>
                         <div className="relative flex items-center justify-center w-full h-full max-w-md mx-auto" onClick={e => e.stopPropagation()}>
-                            
-                            
+
+
                             <div className="absolute left-0 top-0 bottom-0 w-[40%] z-10 cursor-pointer" onClick={prev} />
-                            
+
                             <div className="absolute right-0 top-0 bottom-0 w-[60%] z-10 cursor-pointer" onClick={next} />
 
                             <div className="absolute top-4 left-0 right-0 z-20 px-4 flex gap-1">
@@ -827,7 +856,7 @@ function Feed() {
                                     </div>
                                 </div>
                                 <button onClick={() => setStoryModal(null)} className="text-white/80 p-2 hover:text-white relative z-30">
-                                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                                 </button>
                             </div>
 
@@ -837,9 +866,9 @@ function Feed() {
                                         <video key={current._id || activeStoryIndex} src={current.media[0].url} autoPlay muted loop playsInline className="w-full h-full object-cover" /> :
                                         <img src={current.media[0].url} alt="" className="w-full h-full object-cover" />
                                 ) : (
-                                     <div className="w-full h-full flex items-center justify-center p-8 text-center bg-gradient-to-br from-[#6C63FF] to-[#00D4AA]">
-                                         <p className="text-white text-2xl font-bold font-syne shadow-sm">{current.content}</p>
-                                     </div>
+                                    <div className="w-full h-full flex items-center justify-center p-8 text-center bg-gradient-to-br from-[#6C63FF] to-[#00D4AA]">
+                                        <p className="text-white text-2xl font-bold font-syne shadow-sm">{current.content}</p>
+                                    </div>
                                 )}
                                 {current.media?.length > 0 && current.content && (
                                     <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 pt-20 to-transparent">
@@ -853,42 +882,76 @@ function Feed() {
                 );
             })()}
 
-            
+
             {shareModal && (
                 <div className="lightbox-overlay backdrop-blur-md" style={{ zIndex: 2000 }} onClick={() => setShareModal(null)}>
                     <div className="bg-[#151520] border border-white/[0.1] rounded-3xl p-6 max-w-[320px] w-full mx-4 shadow-2xl relative" onClick={e => e.stopPropagation()}>
                         <h3 className="text-white text-lg font-bold mb-5 text-center font-syne">Share Post</h3>
                         <div className="grid grid-cols-4 gap-3 mb-6">
-                            
+
                             <a href={`https://wa.me/?text=Check out this post on CampusConnect: ${encodeURIComponent(`${window.location.origin}/feed#${shareModal._id}`)}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group relative z-10">
                                 <div className="w-12 h-12 rounded-full bg-[#25D366] flex flex-col items-center justify-center text-white group-hover:scale-110 transition duration-300 shadow-lg shadow-[#25D366]/20">
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.82 9.82 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.82 9.82 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" /></svg>
                                 </div>
                                 <span className="text-white/60 text-[10px] font-medium">WhatsApp</span>
                             </a>
-                            
+
                             <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(`${window.location.origin}/feed#${shareModal._id}`)}&text=${encodeURIComponent("Check this out on CampusConnect!")}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group relative z-10">
                                 <div className="w-12 h-12 rounded-full bg-black border border-white/10 flex flex-col items-center justify-center text-white group-hover:scale-110 transition duration-300 shadow-lg shadow-black/40">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
                                 </div>
                                 <span className="text-white/60 text-[10px] font-medium">X</span>
                             </a>
-                            
+
                             <a href={`mailto:?subject=CampusConnect Post&body=Check out this post: ${encodeURIComponent(`${window.location.origin}/feed#${shareModal._id}`)}`} className="flex flex-col items-center gap-2 group relative z-10">
                                 <div className="w-12 h-12 rounded-full bg-[#EA4335] flex items-center justify-center text-white group-hover:scale-110 transition duration-300 shadow-lg shadow-[#EA4335]/20">
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
                                 </div>
                                 <span className="text-white/60 text-[10px] font-medium">Email</span>
                             </a>
-                            
+
                             <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/feed#${shareModal._id}`); setShareModal(null); }} className="flex flex-col items-center gap-2 group relative z-10">
                                 <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white group-hover:scale-110 transition duration-300 shadow-lg shadow-white/5">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m-6 12h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z"/></svg>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m-6 12h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z" /></svg>
                                 </div>
                                 <span className="text-white/60 text-[10px] font-medium">Copy</span>
                             </button>
                         </div>
                         <button className="w-full py-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] text-white/80 transition font-bold text-[13px] relative z-10" onClick={() => setShareModal(null)}>Cancel</button>
+                    </div>
+                </div>
+            )}
+
+            {reportModal && (
+                <div className="lightbox-overlay backdrop-blur-md" style={{ zIndex: 2000 }} onClick={() => { setReportModal(null); setReportReason(""); }}>
+                    <div className="bg-[#151520] border border-orange-500/20 rounded-3xl p-7 max-w-[400px] w-full mx-4 shadow-[0_10px_40px_rgba(249,115,22,0.15)] relative" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-center w-14 h-14 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 mx-auto mb-4 shadow-inner">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        </div>
+                        <h3 className="text-white text-xl font-bold mb-2 text-center font-syne tracking-tight">Report Content</h3>
+                        <p className="text-white/50 text-[13px] text-center mb-6 leading-relaxed">Please let us know why you are reporting this post. Our moderation team will review it shortly.</p>
+                        
+                        <div className="mb-6">
+                            <label className="block text-white/40 text-[11px] font-bold uppercase tracking-wider mb-2">Reason</label>
+                            <textarea 
+                                value={reportReason}
+                                onChange={(e) => setReportReason(e.target.value)}
+                                placeholder="e.g., Inappropriate content, harassment, spam..."
+                                rows="3"
+                                className="w-full bg-[#0A0A0F] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30 transition-all text-white placeholder-white/20 resize-none shadow-inner"
+                            ></textarea>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button className="flex-1 py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white/60 transition font-bold text-[13px]" onClick={() => { setReportModal(null); setReportReason(""); }}>Cancel</button>
+                            <button 
+                                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-[0_4px_15px_rgba(249,115,22,0.3)] hover:shadow-[0_6px_20px_rgba(249,115,22,0.4)] transition-all font-bold text-[13px] disabled:opacity-50 hover:-translate-y-[1px]" 
+                                onClick={handleReportPost}
+                                disabled={!reportReason.trim() || reportingPost}
+                            >
+                                {reportingPost ? "Submitting..." : "Submit Report"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

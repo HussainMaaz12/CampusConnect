@@ -24,10 +24,10 @@ describe('Auth Endpoints', () => {
         const res = await request(app)
             .post('/api/v1/auth/register')
             .send({
-                name: 'T', // Too short
+                name: 'T', 
                 username: 'testuser',
-                email: 'invalid-email', // Invalid email
-                password: 'pass' // Too short
+                email: 'invalid-email', 
+                password: 'pass' 
             });
 
         expect(res.statusCode).toEqual(400);
@@ -37,7 +37,7 @@ describe('Auth Endpoints', () => {
     });
 
     it('should login successfully', async () => {
-        // Register first
+        
         await request(app).post('/api/v1/auth/register').send({
             name: 'Login User',
             username: 'loginuser',

@@ -200,6 +200,15 @@ function Navbar() {
                                         </svg>
                                         <span>Feed</span>
                                     </Link>
+                                    <Link to="/directory" className={`nav-link ${isActive("/directory") ? "active" : ""}`}>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill={isActive("/directory") ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                            <circle cx="9" cy="7" r="4"></circle>
+                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                        </svg>
+                                        <span>Directory</span>
+                                    </Link>
                                     <Link to="/profile" className={`nav-link ${isActive("/profile") ? "active" : ""}`}>
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill={isActive("/profile") ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -207,7 +216,7 @@ function Navbar() {
                                         </svg>
                                         <span>Profile</span>
                                     </Link>
-                                    {authUser?.role === 'admin' && (
+                                    {['admin', 'super-admin'].includes(authUser?.role) && (
                                         <Link to="/admin" className={`nav-link ${isActive("/admin") ? "active" : ""}`} style={{ color: 'gold', fontWeight: 'bold' }}>
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill={isActive("/admin") ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
@@ -361,7 +370,11 @@ function Navbar() {
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill={isActive("/profile") ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                                 Profile
                             </Link>
-                            {authUser?.role === 'admin' && (
+                            <Link to="/directory" className={`nav-link ${isActive("/directory") ? "active" : ""}`} style={{ fontSize: 16, padding: "14px 20px" }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill={isActive("/directory") ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                Directory
+                            </Link>
+                            {['admin', 'super-admin'].includes(authUser?.role) && (
                                 <Link to="/admin" className={`nav-link ${isActive("/admin") ? "active" : ""}`} style={{ fontSize: 16, padding: "14px 20px", color: 'gold', fontWeight: 'bold' }}>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill={isActive("/admin") ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                                     Master Control

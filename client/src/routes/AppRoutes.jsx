@@ -9,6 +9,7 @@ import UserProfile from "../pages/UserProfile";
 import Chat from "../pages/Chat";
 import NotFound from "../pages/NotFound";
 import AdminDashboard from '../pages/AdminDashboard';
+import Directory from '../pages/Directory';
 
 import ProtectedRoute from "./ProtectedRoute";
 import PublicOnlyRoute from "./PublicOnlyRoute";
@@ -60,6 +61,15 @@ function AppRoutes() {
                     element={
                         <ProtectedRoute>
                             <UserProfile />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/directory"
+                    element={
+                        <ProtectedRoute>
+                            <Directory />
                         </ProtectedRoute>
                     }
                 />

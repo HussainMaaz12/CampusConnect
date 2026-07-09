@@ -265,35 +265,77 @@ function Login() {
     const navigate = useNavigate();
     const { login } = useAuth();
 
-    const [formData, setFormData] = useState({ email: "", password: "" });
-    const [error, setError] = useState("");
+    const [formData, setFormData] = useState({
+        email: "",
+        password: "",
+        code2fa: ""
+    });
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
+    const [error, setError] = useState("");
     const [showPw, setShowPw] = useState(false);
+    
+    
+    const [step, setStep] = useState('login'); 
+    const [tempToken, setTempToken] = useState(null);
 
     const handleChange = (e) =>
         setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
-        const { email, password } = formData;
-        if (!email || !password) {
-            setError("Please enter both email and password.");
-            return;
-        }
-        try {
-            setLoading(true);
-            const response = await api.post("/auth/login", formData);
-            if (response.data.success) {
-                const { user, token } = response.data;
-                login(user, token);
-                navigate("/feed");
+
+        if (step === 'login') {
+            if (!formData.email || !formData.password) {
+                setError("Please fill in all fields.");
+                return;
             }
-        } catch (err) {
-            setError(err.response?.data?.message || "Something went wrong. Try again.");
-        } finally {
-            setLoading(false);
+            try {
+                setLoading(true);
+                setError("");
+                const response = await api.post("/auth/login", {
+                    email: formData.email,
+                    password: formData.password,
+                });
+
+                if (response.data.success) {
+                    if (response.data.requires2FA) {
+                        setTempToken(response.data.tempToken);
+                        setStep('verify2FA');
+                    } else {
+                        const { user, token } = response.data;
+                        login(user, token);
+                        navigate("/feed");
+                    }
+                }
+            } catch (err) {
+                setError(err.response?.data?.message || "Login failed. Please try again.");
+            } finally {
+                setLoading(false);
+            }
+        } else if (step === 'verify2FA') {
+            if (!formData.code2fa) {
+                setError("Please enter your 2FA code.");
+                return;
+            }
+            try {
+                setLoading(true);
+                setError("");
+                const response = await api.post("/auth/verify-2fa", {
+                    tempToken,
+                    code: formData.code2fa
+                });
+
+                if (response.data.success) {
+                    const { user, token } = response.data;
+                    login(user, token);
+                    navigate("/feed");
+                }
+            } catch (err) {
+                setError(err.response?.data?.message || "Invalid 2FA code.");
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -369,7 +411,6 @@ function Login() {
                 
                 <div className="glass-card rounded-3xl p-7">
 
-                    
                     {error && (
                         <div className="error-box mb-5 rounded-2xl border border-red-500/20 bg-red-500/6 px-4 py-3 flex items-start gap-2.5">
                             <span className="text-red-400 mt-0.5 flex-shrink-0">⚠</span>
@@ -378,108 +419,137 @@ function Login() {
                     )}
 
                     <form onSubmit={handleSubmit}>
-                        
-                        <div className="s2 mb-4">
-                            <label className="field-label">Email address</label>
-                            <div className="relative">
-                                <input
-                                    type="email"
-                                    name="email"
-                                    placeholder="you@college.edu"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    className="cc-input pr-11"
-                                    autoComplete="email"
-                                />
-                                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/15 pointer-events-none text-base">
-                                    ✉
-                                </span>
-                            </div>
-                        </div>
+                        {step === 'login' ? (
+                            <>
+                                <div className="s2 mb-4">
+                                    <label className="field-label">Email address</label>
+                                    <div className="relative">
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            placeholder="you@college.edu"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            className="cc-input pr-11"
+                                            autoComplete="email"
+                                        />
+                                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/15 pointer-events-none text-base">
+                                            ✉
+                                        </span>
+                                    </div>
+                                </div>
 
-                        
-                        <div className="s3 mb-5">
-                            <div className="flex items-center justify-between mb-2">
-                                <label className="field-label" style={{ marginBottom: 0 }}>Password</label>
-                                <button
-                                    type="button"
-                                    className="text-[12px] text-[#6C63FF]/60 hover:text-[#6C63FF] transition font-medium"
-                                    tabIndex={-1}
-                                >
-                                    Forgot password?
-                                </button>
+                                <div className="s3 mb-5">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="field-label" style={{ marginBottom: 0 }}>Password</label>
+                                        <button
+                                            type="button"
+                                            className="text-[12px] text-[#6C63FF]/60 hover:text-[#6C63FF] transition font-medium"
+                                            tabIndex={-1}
+                                        >
+                                            Forgot password?
+                                        </button>
+                                    </div>
+                                    <div className="relative">
+                                        <input
+                                            type={showPw ? "text" : "password"}
+                                            name="password"
+                                            placeholder="••••••••"
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                            className="cc-input pr-11"
+                                            autoComplete="current-password"
+                                        />
+                                        <button
+                                            type="button"
+                                            className="pw-toggle absolute right-3.5 top-1/2 -translate-y-1/2"
+                                            onClick={() => setShowPw((p) => !p)}
+                                            tabIndex={-1}
+                                        >
+                                            <EyeIcon open={showPw} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="s2 mb-5">
+                                <label className="field-label">Two-Factor Authentication Code</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        name="code2fa"
+                                        placeholder="000000"
+                                        value={formData.code2fa}
+                                        onChange={handleChange}
+                                        className="cc-input text-center text-xl tracking-[0.2em]"
+                                        maxLength="6"
+                                        autoComplete="off"
+                                    />
+                                </div>
                             </div>
-                            <div className="relative">
-                                <input
-                                    type={showPw ? "text" : "password"}
-                                    name="password"
-                                    placeholder="••••••••"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    className="cc-input pr-11"
-                                    autoComplete="current-password"
-                                />
-                                <button
-                                    type="button"
-                                    className="pw-toggle absolute right-3.5 top-1/2 -translate-y-1/2"
-                                    onClick={() => setShowPw((p) => !p)}
-                                    tabIndex={-1}
-                                >
-                                    <EyeIcon open={showPw} />
-                                </button>
-                            </div>
-                        </div>
+                        )}
 
-                        
                         <div className="s4">
                             <button type="submit" className="submit-btn" disabled={loading}>
                                 {loading ? (
                                     <>
                                         <span className="spinner" />
-                                        Signing in…
+                                        {step === 'login' ? 'Signing in…' : 'Verifying…'}
                                     </>
                                 ) : (
-                                    "Sign In →"
+                                    step === 'login' ? "Sign In →" : "Verify 2FA →"
                                 )}
                             </button>
                         </div>
                     </form>
 
-                    
-                    <div className="s5 or-divider my-5">or</div>
+                    {step === 'login' && (
+                        <>
+                            <div className="s5 or-divider my-5">or</div>
 
-                    
-                    <div className="s5">
-                        <button
-                            className="social-btn"
-                            onClick={() => handleGoogleLogin()}
-                            disabled={googleLoading}
-                        >
-                            {googleLoading ? (
-                                <>
-                                    <span className="spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }} />
-                                    Signing in with Google…
-                                </>
-                            ) : (
-                                <>
-                                    <GoogleIcon />
-                                    Continue with Google
-                                </>
-                            )}
-                        </button>
-                    </div>
+                            <div className="s5">
+                                <button
+                                    className="social-btn"
+                                    onClick={() => handleGoogleLogin()}
+                                    disabled={googleLoading}
+                                >
+                                    {googleLoading ? (
+                                        <>
+                                            <span className="spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }} />
+                                            Signing in with Google…
+                                        </>
+                                    ) : (
+                                        <>
+                                            <GoogleIcon />
+                                            Continue with Google
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
 
-                
-                <p className="s6 text-white/25 text-[13px] text-center mt-6">
-                    New to CampusConnect?{" "}
-                    <Link
-                        to="/register"
-                        className="text-[#6C63FF] hover:text-[#A78BFA] font-semibold transition"
-                    >
-                        Create an account →
-                    </Link>
-                </p>
+                {step === 'login' ? (
+                    <p className="s6 text-white/25 text-[13px] text-center mt-6">
+                        New to CampusConnect?{" "}
+                        <Link
+                            to="/register"
+                            className="text-[#6C63FF] hover:text-[#A78BFA] font-semibold transition"
+                        >
+                            Create an account →
+                        </Link>
+                    </p>
+                ) : (
+                    <p className="s6 text-white/25 text-[13px] text-center mt-6">
+                        <button
+                            onClick={() => setStep('login')}
+                            className="text-[#6C63FF] hover:text-[#A78BFA] font-semibold transition"
+                        >
+                            ← Back to Login
+                        </button>
+                    </p>
+                )}
             </div>
         </div>
     );

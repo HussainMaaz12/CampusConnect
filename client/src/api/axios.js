@@ -1,24 +1,71 @@
 import axios from "axios";
 
+let accessToken = null;
+
+export const setAccessToken = (token) => {
+    accessToken = token;
+};
+
+export const getAccessToken = () => accessToken;
+
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1",
     headers: {
         "Content-Type": "application/json",
     },
+    withCredentials: true, 
 });
 
 
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("campusconnect_token");
-
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+        if (accessToken) {
+            config.headers.Authorization = `Bearer ${accessToken}`;
         }
-
         return config;
     },
     (error) => Promise.reject(error)
+);
+
+
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+        
+        
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            
+            if (originalRequest.url.includes('/auth/refresh')) {
+                return Promise.reject(error);
+            }
+
+            originalRequest._retry = true;
+
+            try {
+                
+                const res = await axios.post(
+                    `${api.defaults.baseURL}/auth/refresh`, 
+                    {}, 
+                    { withCredentials: true }
+                );
+                
+                const newToken = res.data.token;
+                setAccessToken(newToken);
+                
+                
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                return api(originalRequest);
+            } catch (refreshError) {
+                
+                setAccessToken(null);
+                window.dispatchEvent(new Event('auth:expired'));
+                return Promise.reject(refreshError);
+            }
+        }
+        
+        return Promise.reject(error);
+    }
 );
 
 export default api;

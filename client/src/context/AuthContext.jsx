@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import api from "../api/axios";
+import api, { setAccessToken } from "../api/axios";
 
 const AuthContext = createContext();
 
@@ -11,44 +11,48 @@ export const AuthProvider = ({ children }) => {
     
     useEffect(() => {
         const verifyUser = async () => {
-            const savedToken = localStorage.getItem("campusconnect_token");
-
-            if (!savedToken) {
-                setLoading(false);
-                return;
-            }
-
             try {
-                const response = await api.get("/auth/me");
+                
+                const response = await api.post("/auth/refresh");
 
                 if (response.data.success) {
-                    setAuthUser(response.data.user);
-                    setAuthToken(savedToken);
-                    localStorage.setItem(
-                        "campusconnect_user",
-                        JSON.stringify(response.data.user)
-                    );
+                    setAccessToken(response.data.token);
+                    setAuthToken(response.data.token);
+                    
+                    
+                    const meRes = await api.get("/auth/me");
+                    if (meRes.data.success) {
+                        setAuthUser(meRes.data.user);
+                    }
                 }
             } catch (error) {
-                localStorage.removeItem("campusconnect_user");
-                localStorage.removeItem("campusconnect_token");
+                
                 setAuthUser(null);
                 setAuthToken(null);
+                setAccessToken(null);
+                localStorage.removeItem("campusconnect_user");
             } finally {
                 setLoading(false);
             }
         };
 
         verifyUser();
+
+        const handleAuthExpired = () => {
+            logout();
+        };
+
+        window.addEventListener('auth:expired', handleAuthExpired);
+        return () => window.removeEventListener('auth:expired', handleAuthExpired);
     }, []);
 
     
     const login = (user, token) => {
         setAuthUser(user);
         setAuthToken(token);
+        setAccessToken(token);
 
         localStorage.setItem("campusconnect_user", JSON.stringify(user));
-        localStorage.setItem("campusconnect_token", token);
     };
 
     
@@ -58,12 +62,18 @@ export const AuthProvider = ({ children }) => {
     };
 
     
-    const logout = () => {
+    const logout = async () => {
+        try {
+            await api.post('/auth/logout');
+        } catch (e) {
+            console.error(e);
+        }
+        
         setAuthUser(null);
         setAuthToken(null);
+        setAccessToken(null);
 
         localStorage.removeItem("campusconnect_user");
-        localStorage.removeItem("campusconnect_token");
     };
 
     return (

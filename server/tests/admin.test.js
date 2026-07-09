@@ -11,13 +11,16 @@ describe('Admin Endpoints', () => {
     let testUserId;
 
     beforeEach(async () => {
-        // Initialize the master admin
+        
         await setupMasterAccount();
 
         const resAdmin = await request(app)
             .post('/api/v1/auth/login')
             .send({ email: "admin@campusconnect.local", password: 'adminpassword' });
         adminToken = resAdmin.body.token;
+
+        
+        await User.updateOne({ email: "admin@campusconnect.local" }, { isTwoFactorEnabled: true });
 
         const resUser = await request(app)
             .post('/api/v1/auth/register')
@@ -41,7 +44,7 @@ describe('Admin Endpoints', () => {
     });
 
     it('should prevent non-admin from granting permissions', async () => {
-        // Register another normal user
+        
         const resNormal = await request(app)
             .post('/api/v1/auth/register')
             .send({

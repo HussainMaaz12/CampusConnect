@@ -7,10 +7,41 @@ const { uploadToCloudinary } = require("../config/cloudinary");
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
-const generateToken = (id) => {
+const crypto = require("crypto");
+const speakeasy = require("speakeasy");
+const qrcode = require("qrcode");
+const RefreshToken = require("../models/RefreshToken");
+
+const generateAccessToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: "7d",
+        expiresIn: "15m",
     });
+};
+
+const generateRefreshToken = (id) => {
+    return crypto.randomBytes(40).toString('hex');
+};
+
+const generateTokensAndCookies = async (res, user) => {
+    const accessToken = generateAccessToken(user._id);
+    const refreshTokenValue = generateRefreshToken(user._id);
+    const familyId = crypto.randomBytes(20).toString('hex');
+
+    await RefreshToken.create({
+        userId: user._id,
+        token: refreshTokenValue,
+        familyId,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    });
+
+    res.cookie('refreshToken', refreshTokenValue, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, 
+    });
+
+    return accessToken;
 };
 
 
@@ -55,21 +86,26 @@ const registerUser = async (req, res) => {
             password: hashedPassword,
         });
 
-        const token = generateToken(user._id);
+        const accessToken = await generateTokensAndCookies(res, user);
 
         res.status(201).json({
             success: true,
             message: "User registered successfully",
-            token,
+            token: accessToken,
             user: {
                 _id: user._id,
                 name: user.name,
                 username: user.username,
                 email: user.email,
                 bio: user.bio,
+                department: user.department,
+                year: user.year,
+                interests: user.interests,
+                socialLinks: user.socialLinks,
                 avatar: user.avatar,
                 role: user.role,
                 canPost: user.canPost,
+                isTwoFactorEnabled: user.isTwoFactorEnabled,
                 followers: user.followers || [],
                 following: user.following || [],
             },
@@ -116,21 +152,36 @@ const loginUser = async (req, res) => {
             });
         }
 
-        const token = generateToken(user._id);
+        if (user.isTwoFactorEnabled && (user.role === 'admin' || user.role === 'super-admin')) {
+            const tempToken = jwt.sign({ id: user._id, is2FA: true }, process.env.JWT_SECRET, { expiresIn: '10m' });
+            return res.status(200).json({
+                success: true,
+                requires2FA: true,
+                tempToken,
+                message: "Please enter your 2FA code."
+            });
+        }
+
+        const accessToken = await generateTokensAndCookies(res, user);
 
         res.status(200).json({
             success: true,
             message: "Login successful",
-            token,
+            token: accessToken,
             user: {
                 _id: user._id,
                 name: user.name,
                 username: user.username,
                 email: user.email,
                 bio: user.bio,
+                department: user.department,
+                year: user.year,
+                interests: user.interests,
+                socialLinks: user.socialLinks,
                 avatar: user.avatar,
                 role: user.role,
                 canPost: user.canPost,
+                isTwoFactorEnabled: user.isTwoFactorEnabled,
                 followers: user.followers || [],
                 following: user.following || [],
             },
@@ -159,9 +210,14 @@ const getMe = async (req, res) => {
                 username: user.username,
                 email: user.email,
                 bio: user.bio,
+                department: user.department,
+                year: user.year,
+                interests: user.interests,
+                socialLinks: user.socialLinks,
                 avatar: user.avatar,
                 role: user.role,
                 canPost: user.canPost,
+                isTwoFactorEnabled: user.isTwoFactorEnabled,
                 followers: user.followers || [],
                 following: user.following || [],
             },
@@ -221,6 +277,25 @@ const updateProfile = async (req, res) => {
             }
         }
 
+        if (req.body.department !== undefined) {
+            user.department = req.body.department.trim();
+        }
+
+        if (req.body.year !== undefined) {
+            user.year = req.body.year ? Number(req.body.year) : null;
+        }
+
+        if (req.body.interests !== undefined) {
+            user.interests = Array.isArray(req.body.interests) ? req.body.interests : [];
+        }
+
+        if (req.body.socialLinks !== undefined) {
+            user.socialLinks = {
+                ...user.socialLinks,
+                ...req.body.socialLinks
+            };
+        }
+
         await user.save();
 
         res.status(200).json({
@@ -232,9 +307,14 @@ const updateProfile = async (req, res) => {
                 username: user.username,
                 email: user.email,
                 bio: user.bio,
+                department: user.department,
+                year: user.year,
+                interests: user.interests,
+                socialLinks: user.socialLinks,
                 avatar: user.avatar,
                 role: user.role,
                 canPost: user.canPost,
+                isTwoFactorEnabled: user.isTwoFactorEnabled,
                 followers: user.followers || [],
                 following: user.following || [],
             },
@@ -255,9 +335,9 @@ const updateProfile = async (req, res) => {
 const getPublicProfile = async (req, res) => {
     try {
         const user = await User.findOne({ username: req.params.username.toLowerCase() })
-            .select("name username bio avatar followers following createdAt")
-            .populate("followers", "name username avatar")
-            .populate("following", "name username avatar");
+            .select("name username bio department year interests socialLinks avatar followers following createdAt role")
+            .populate("followers", "name username avatar department")
+            .populate("following", "name username avatar department");
 
         if (!user) {
             return res.status(404).json({
@@ -460,12 +540,12 @@ const googleLogin = async (req, res) => {
             });
         }
 
-        const token = generateToken(user._id);
+        const accessToken = await generateTokensAndCookies(res, user);
 
         res.status(200).json({
             success: true,
             message: "Google login successful",
-            token,
+            token: accessToken,
             user: {
                 _id: user._id,
                 name: user.name,
@@ -475,6 +555,7 @@ const googleLogin = async (req, res) => {
                 avatar: user.avatar,
                 role: user.role,
                 canPost: user.canPost,
+                isTwoFactorEnabled: user.isTwoFactorEnabled,
                 followers: user.followers || [],
                 following: user.following || [],
             },
@@ -489,13 +570,206 @@ const googleLogin = async (req, res) => {
     }
 };
 
+const setup2FA = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        const secret = speakeasy.generateSecret({ name: `CampusConnect (${user.email})` });
+
+        user.twoFactorSecret = secret.base32;
+        await user.save();
+
+        qrcode.toDataURL(secret.otpauth_url, (err, data_url) => {
+            if (err) return res.status(500).json({ success: false, message: "Error generating QR code" });
+            res.status(200).json({
+                success: true,
+                qrCode: data_url,
+                secret: secret.base32
+            });
+        });
+    } catch (error) {
+        console.error("Setup 2FA error:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+const verify2FA = async (req, res) => {
+    try {
+        const { tempToken, code } = req.body;
+        
+        let userId;
+        if (tempToken) {
+            const decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+            userId = decoded.id;
+        } else if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+            const token = req.headers.authorization.split(" ")[1];
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            userId = decoded.id;
+        } else if (req.user) {
+            userId = req.user._id;
+        } else {
+            return res.status(401).json({ success: false, message: "Unauthorized" });
+        }
+
+        const user = await User.findById(userId);
+
+        const verified = speakeasy.totp.verify({
+            secret: user.twoFactorSecret,
+            encoding: 'base32',
+            token: code
+        });
+
+        if (!verified) {
+            return res.status(400).json({ success: false, message: "Invalid 2FA code" });
+        }
+
+        user.isTwoFactorEnabled = true;
+        await user.save();
+
+        const accessToken = await generateTokensAndCookies(res, user);
+
+        res.status(200).json({
+            success: true,
+            message: "2FA verified successfully",
+            token: accessToken,
+            user: {
+                _id: user._id,
+                name: user.name,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                canPost: user.canPost,
+                isTwoFactorEnabled: user.isTwoFactorEnabled,
+            },
+        });
+    } catch (error) {
+        console.error("Verify 2FA error:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+const refreshSession = async (req, res) => {
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) return res.status(401).json({ success: false, message: "No refresh token" });
+
+    try {
+        const tokenDoc = await RefreshToken.findOne({ token: refreshToken });
+        if (!tokenDoc) {
+            res.clearCookie('refreshToken');
+            return res.status(403).json({ success: false, message: "Invalid refresh token" });
+        }
+
+        if (tokenDoc.isRevoked || tokenDoc.expiresAt < new Date()) {
+            await RefreshToken.deleteMany({ familyId: tokenDoc.familyId });
+            res.clearCookie('refreshToken');
+            return res.status(403).json({ success: false, message: "Token expired or revoked" });
+        }
+
+        const user = await User.findById(tokenDoc.userId);
+        if (!user) return res.status(401).json({ success: false, message: "User not found" });
+
+        const accessToken = generateAccessToken(user._id);
+        const newRefreshToken = generateRefreshToken(user._id);
+
+        tokenDoc.isRevoked = true;
+        await tokenDoc.save();
+
+        await RefreshToken.create({
+            userId: user._id,
+            token: newRefreshToken,
+            familyId: tokenDoc.familyId,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        });
+
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000, 
+        });
+
+        res.status(200).json({ success: true, token: accessToken, user: { role: user.role, isTwoFactorEnabled: user.isTwoFactorEnabled } });
+    } catch (error) {
+        console.error("Refresh error:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+const logoutUser = async (req, res) => {
+    const { refreshToken } = req.cookies;
+    if (refreshToken) {
+        await RefreshToken.findOneAndDelete({ token: refreshToken });
+    }
+    res.clearCookie('refreshToken');
+    res.status(200).json({ success: true, message: "Logged out" });
+};
+
+const getDirectory = async (req, res) => {
+    try {
+        const { search, department, year, interest, page = 1, limit = 20 } = req.query;
+        
+        let query = {};
+        
+        // Exclude super-admins from directory if desired, or just everyone
+        // query.role = { $ne: 'super-admin' };
+
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: "i" } },
+                { username: { $regex: search, $options: "i" } },
+                { bio: { $regex: search, $options: "i" } }
+            ];
+        }
+
+        if (department) {
+            query.department = { $regex: `^${department}$`, $options: "i" };
+        }
+
+        if (year) {
+            query.year = Number(year);
+        }
+
+        if (interest) {
+            query.interests = { $regex: interest, $options: "i" };
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const users = await User.find(query)
+            .select("name username bio department year interests avatar followers following")
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(Number(limit));
+            
+        const total = await User.countDocuments(query);
+
+        res.status(200).json({
+            success: true,
+            count: users.length,
+            total,
+            pages: Math.ceil(total / Number(limit)),
+            users,
+        });
+    } catch (error) {
+        console.error("Directory error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Server error fetching directory",
+        });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
+    googleLogin,
     getMe,
     updateProfile,
     getPublicProfile,
     toggleFollow,
     getSuggestions,
-    googleLogin,
+    setup2FA,
+    verify2FA,
+    refreshSession,
+    logoutUser,
+    getDirectory
 };

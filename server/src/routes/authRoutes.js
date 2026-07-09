@@ -19,6 +19,11 @@ const {
     toggleFollow,
     getSuggestions,
     googleLogin,
+    setup2FA,
+    verify2FA,
+    refreshSession,
+    logoutUser,
+    getDirectory
 } = require("../controllers/authController");
 
 const protect = require("../middleware/authMiddleware");
@@ -34,5 +39,11 @@ router.get("/me", protect, getMe);
 router.put("/update-profile", protect, updateProfile);
 router.put("/follow/:userId", protect, toggleFollow);
 router.get("/suggestions", protect, getSuggestions);
+router.get("/directory", protect, getDirectory);
+
+router.post("/setup-2fa", protect, setup2FA);
+router.post("/verify-2fa", authLimiter, verify2FA);
+router.post("/refresh", refreshSession);
+router.post("/logout", logoutUser);
 
 module.exports = router;

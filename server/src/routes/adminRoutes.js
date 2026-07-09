@@ -19,15 +19,28 @@ const adminActionLogger = (action) => {
 
 
 const authMiddleware = require('../middleware/authMiddleware');
-const { requireAdmin } = require('../middleware/adminMiddleware');
+const { requireAdmin, requireSuperAdmin } = require('../middleware/adminMiddleware');
 
-
-const { grantPostPermission, revokePostPermission, getAllUsers } = require('../controllers/adminController');
-
-
+const { 
+    grantPostPermission, 
+    revokePostPermission, 
+    getAllUsers, 
+    getAuditLogs,
+    getReports,
+    updateReportStatus,
+    getAnalytics,
+    bulkUpdatePermissions,
+    exportUsersCSV
+} = require('../controllers/adminController');
 
 router.get('/users', authMiddleware, requireAdmin, validate(searchSchema), getAllUsers);
+router.get('/audit-logs', authMiddleware, requireSuperAdmin, getAuditLogs);
 router.put('/grant/:userId', authMiddleware, requireAdmin, adminActionLimiter, validate(permissionSchema), adminActionLogger('grantPostPermission'), grantPostPermission);
 router.put('/revoke/:userId', authMiddleware, requireAdmin, adminActionLimiter, validate(permissionSchema), adminActionLogger('revokePostPermission'), revokePostPermission);
+router.get('/reports', authMiddleware, requireAdmin, getReports);
+router.put('/reports/:id/status', authMiddleware, requireAdmin, adminActionLimiter, adminActionLogger('updateReportStatus'), updateReportStatus);
+router.get('/analytics', authMiddleware, requireAdmin, getAnalytics);
+router.put('/bulk-permissions', authMiddleware, requireSuperAdmin, adminActionLimiter, bulkUpdatePermissions);
+router.get('/export-csv', authMiddleware, requireAdmin, exportUsersCSV);
 
 module.exports = router;

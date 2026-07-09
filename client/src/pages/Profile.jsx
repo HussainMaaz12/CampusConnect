@@ -69,15 +69,43 @@ function Profile() {
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
-    const [editForm, setEditForm] = useState({ name: authUser?.name || "", bio: authUser?.bio || "" });
+    const [editForm, setEditForm] = useState({ 
+        name: authUser?.name || "", 
+        bio: authUser?.bio || "",
+        department: authUser?.department || "",
+        year: authUser?.year || "",
+        interests: authUser?.interests?.join(", ") || "",
+        linkedin: authUser?.socialLinks?.linkedin || "",
+        github: authUser?.socialLinks?.github || ""
+    });
 
     const fetchMyPosts = async () => { try { setLoading(true); const r = await api.get("/posts/my-posts"); if (r.data.success) setMyPosts(r.data.posts); } catch { setError("Failed to load posts"); } finally { setLoading(false); } };
 
     const handleProfileUpdate = async (e) => {
         e.preventDefault(); setError(""); setSuccessMessage("");
         if (!editForm.name.trim()) { setError("Name cannot be empty"); return; }
-        try { setSavingProfile(true); const r = await api.put("/auth/update-profile", { name: editForm.name, bio: editForm.bio }); if (r.data.success) { updateAuthUser(r.data.user); setSuccessMessage("Profile updated!"); setTimeout(() => setSuccessMessage(""), 3000); } }
-        catch (err) { setError(err.response?.data?.message || "Failed"); }
+        
+        const payload = {
+            name: editForm.name,
+            bio: editForm.bio,
+            department: editForm.department,
+            year: editForm.year ? Number(editForm.year) : null,
+            interests: editForm.interests ? editForm.interests.split(",").map(i => i.trim()).filter(i => i) : [],
+            socialLinks: {
+                linkedin: editForm.linkedin,
+                github: editForm.github
+            }
+        };
+
+        try { 
+            setSavingProfile(true); 
+            const r = await api.put("/auth/update-profile", payload); 
+            if (r.data.success) { 
+                updateAuthUser(r.data.user); 
+                setSuccessMessage("Profile updated!"); 
+                setTimeout(() => setSuccessMessage(""), 3000); 
+            } 
+        } catch (err) { setError(err.response?.data?.message || "Failed"); }
         finally { setSavingProfile(false); }
     };
 
@@ -107,7 +135,19 @@ function Profile() {
     const totalComments = myPosts.reduce((s, p) => s + (p.comments?.length || 0), 0);
 
     useEffect(() => { fetchMyPosts(); }, []);
-    useEffect(() => { if (authUser) setEditForm({ name: authUser.name || "", bio: authUser.bio || "" }); }, [authUser]);
+    useEffect(() => { 
+        if (authUser) {
+            setEditForm({ 
+                name: authUser.name || "", 
+                bio: authUser.bio || "",
+                department: authUser.department || "",
+                year: authUser.year || "",
+                interests: authUser.interests?.join(", ") || "",
+                linkedin: authUser.socialLinks?.linkedin || "",
+                github: authUser.socialLinks?.github || ""
+            });
+        } 
+    }, [authUser]);
 
     return (
         <div className="profile-root">
@@ -193,16 +233,45 @@ function Profile() {
                                     <h2 className="text-white/70 text-[16px] font-bold">Edit Profile</h2>
                                 </div>
                                 <form onSubmit={handleProfileUpdate} className="space-y-4">
-                                    <div>
-                                        <label className="block text-white/30 text-[12px] font-semibold mb-2 uppercase tracking-wider">Display Name</label>
-                                        <input type="text" value={editForm.name} onChange={(e) => setEditForm(p => ({ ...p, name: e.target.value }))} className="p-input" placeholder="Your name" />
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-white/30 text-[12px] font-semibold mb-2 uppercase tracking-wider">Display Name</label>
+                                            <input type="text" value={editForm.name} onChange={(e) => setEditForm(p => ({ ...p, name: e.target.value }))} className="p-input" placeholder="Your name" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-white/30 text-[12px] font-semibold mb-2 uppercase tracking-wider">Department / Major</label>
+                                            <input type="text" value={editForm.department} onChange={(e) => setEditForm(p => ({ ...p, department: e.target.value }))} className="p-input" placeholder="e.g. Computer Science" />
+                                        </div>
                                     </div>
+                                    
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-white/30 text-[12px] font-semibold mb-2 uppercase tracking-wider">Graduation Year</label>
+                                            <input type="number" value={editForm.year} onChange={(e) => setEditForm(p => ({ ...p, year: e.target.value }))} className="p-input" placeholder="e.g. 2026" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-white/30 text-[12px] font-semibold mb-2 uppercase tracking-wider">Interests (Comma separated)</label>
+                                            <input type="text" value={editForm.interests} onChange={(e) => setEditForm(p => ({ ...p, interests: e.target.value }))} className="p-input" placeholder="AI, Web3, Music..." />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-white/30 text-[12px] font-semibold mb-2 uppercase tracking-wider">LinkedIn URL</label>
+                                            <input type="url" value={editForm.linkedin} onChange={(e) => setEditForm(p => ({ ...p, linkedin: e.target.value }))} className="p-input" placeholder="https://linkedin.com/in/..." />
+                                        </div>
+                                        <div>
+                                            <label className="block text-white/30 text-[12px] font-semibold mb-2 uppercase tracking-wider">GitHub URL</label>
+                                            <input type="url" value={editForm.github} onChange={(e) => setEditForm(p => ({ ...p, github: e.target.value }))} className="p-input" placeholder="https://github.com/..." />
+                                        </div>
+                                    </div>
+
                                     <div>
                                         <label className="block text-white/30 text-[12px] font-semibold mb-2 uppercase tracking-wider">Bio</label>
-                                        <textarea rows="3" value={editForm.bio} onChange={(e) => setEditForm(p => ({ ...p, bio: e.target.value }))} className="p-input" placeholder="Tell us about yourself..." maxLength={300} />
-                                        <p className="text-right text-white/10 text-[10px] mt-1">{editForm.bio.length}/300</p>
+                                        <textarea rows="3" value={editForm.bio} onChange={(e) => setEditForm(p => ({ ...p, bio: e.target.value }))} className="p-input" placeholder="Tell us about yourself..." maxLength={160} />
+                                        <p className="text-right text-white/10 text-[10px] mt-1">{editForm.bio.length}/160</p>
                                     </div>
-                                    <button type="submit" disabled={savingProfile} className="p-cta">
+                                    <button type="submit" disabled={savingProfile} className="p-cta w-full sm:w-auto">
                                         {savingProfile ? <><span className="p-spinner" />Saving...</> : "Save Changes →"}
                                     </button>
                                 </form>
