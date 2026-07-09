@@ -1,5 +1,15 @@
 const express = require("express");
 const cors = require("cors");
+const Sentry = require("@sentry/node");
+const { errorHandler, notFound } = require("./middleware/errorMiddleware");
+
+if (process.env.SENTRY_DSN) {
+    Sentry.init({
+        dsn: process.env.SENTRY_DSN,
+        tracesSampleRate: 1.0,
+    });
+}
+
 
 const healthRoutes = require("./routes/healthRoutes");
 const authRoutes = require("./routes/authRoutes");
@@ -66,12 +76,6 @@ const setupMasterAccount = async () => {
     }
 };
 
-
-setupMasterAccount();
-
-
-
-
 app.use(
     cors({
         origin: [
@@ -86,13 +90,17 @@ app.use(
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
+if (process.env.SENTRY_DSN) {
+    Sentry.setupExpressErrorHandler(app);
+}
 
-app.use("/api", healthRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/posts", postRoutes);
-app.use("/api/chat", chatRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/admin", adminRoutes);
+
+app.use("/api/v1", healthRoutes);
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/posts", postRoutes);
+app.use("/api/v1/chat", chatRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 
 app.get("/", (req, res) => {
@@ -113,4 +121,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-module.exports = app;
+app.use(notFound);
+app.use(errorHandler);
+
+module.exports = { app, setupMasterAccount };

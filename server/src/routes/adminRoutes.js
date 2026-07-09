@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
+const { validate } = require('../middleware/validateMiddleware');
+const { permissionSchema, searchSchema } = require('../validators/adminValidators');
 
 const adminActionLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
@@ -24,8 +26,8 @@ const { grantPostPermission, revokePostPermission, getAllUsers } = require('../c
 
 
 
-router.get('/users', authMiddleware, requireAdmin, getAllUsers);
-router.put('/grant/:userId', authMiddleware, requireAdmin, adminActionLimiter, adminActionLogger('grantPostPermission'), grantPostPermission);
-router.put('/revoke/:userId', authMiddleware, requireAdmin, adminActionLimiter, adminActionLogger('revokePostPermission'), revokePostPermission);
+router.get('/users', authMiddleware, requireAdmin, validate(searchSchema), getAllUsers);
+router.put('/grant/:userId', authMiddleware, requireAdmin, adminActionLimiter, validate(permissionSchema), adminActionLogger('grantPostPermission'), grantPostPermission);
+router.put('/revoke/:userId', authMiddleware, requireAdmin, adminActionLimiter, validate(permissionSchema), adminActionLogger('revokePostPermission'), revokePostPermission);
 
 module.exports = router;

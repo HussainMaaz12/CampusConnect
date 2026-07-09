@@ -1,12 +1,13 @@
 const http = require("http");
 require("dotenv").config();
-const app = require("./app");
+const { app, setupMasterAccount } = require("./app");
 const connectDB = require("./config/db");
 const { initSocket } = require("./socket");
 
 const PORT = process.env.PORT || 5000;
 
-connectDB().then(() => {
+connectDB().then(async () => {
+    await setupMasterAccount();
     const httpServer = http.createServer(app);
 
 

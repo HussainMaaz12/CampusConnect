@@ -1,0 +1,40 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Install Dependencies (Root)
+      run: npm install
+      
+    - name: Install Dependencies (Server)
+      run: npm install --prefix server
+      
+    - name: Install Dependencies (Client)
+      run: npm install --prefix client
+      
+    - name: Run Server Tests
+      run: npm run test --prefix server
+      env:
+        JWT_SECRET: test_secret
+        NODE_ENV: test
+        MASTER_DEV_PASSWORD: ci_dummy_password

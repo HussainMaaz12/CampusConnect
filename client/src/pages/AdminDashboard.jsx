@@ -31,7 +31,8 @@ const AdminDashboard = () => {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const res = await axios.get('/admin/users');
+            const query = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
+            const res = await axios.get(`/admin/users${query}`);
             setUsersList(res.data.users);
         } catch (error) {
             console.error("Failed to fetch users:", error);
@@ -43,9 +44,13 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         if (authUser?.role === 'admin') {
-            fetchUsers();
+            const delayDebounceFn = setTimeout(() => {
+                fetchUsers();
+            }, 300);
+
+            return () => clearTimeout(delayDebounceFn);
         }
-    }, [authUser]);
+    }, [authUser, searchTerm]);
 
     const togglePermission = async (targetUser) => {
         try {
@@ -81,10 +86,7 @@ const AdminDashboard = () => {
         );
     }
 
-    const filteredUsers = usersList.filter(u => 
-        u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        u.username?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+
 
     return (
         <div className="min-h-screen bg-[#0A0A0F]">
@@ -136,10 +138,10 @@ const AdminDashboard = () => {
                     <div className="flex flex-col gap-2">
                         {loading ? (
                             <div className="p-10 text-center text-white/30 text-sm animate-pulse">Loading network database...</div>
-                        ) : filteredUsers.length === 0 ? (
+                        ) : usersList.length === 0 ? (
                             <div className="p-10 text-center text-white/40 text-sm">No users found matching your criteria.</div>
                         ) : (
-                            filteredUsers.map((u, i) => (
+                            usersList.map((u, i) => (
                                 <div key={u._id} className="group p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:bg-white/[0.02]" style={{ animationDelay: `${i * 0.05}s` }}>
                                     <div className="flex items-center gap-4">
                                         <Avatar name={u.name} avatar={u.avatar} size={42} />
