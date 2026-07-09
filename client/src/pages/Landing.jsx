@@ -25,26 +25,8 @@ const CSS = `
 }
 *, *::before, *::after { box-sizing: border-box; }
 
-.lp { font-family: 'DM Sans', sans-serif; background: var(--bg); color: #fff; overflow-x: hidden; cursor: none; scroll-behavior: smooth; }
+.lp { font-family: 'DM Sans', sans-serif; background: var(--bg); color: #fff; overflow-x: hidden; scroll-behavior: smooth; }
 .lp h1, .lp h2, .lp h3 { font-family: 'Syne', sans-serif; }
-
-/* ── CURSOR — transform only, RAF-driven ── */
-.cc-dot {
-  width: 8px; height: 8px;
-  background: var(--indigo);
-  border-radius: 50%;
-  position: fixed; top: 0; left: 0;
-  z-index: 9999; pointer-events: none;
-  will-change: transform;
-}
-.cc-ring {
-  width: 28px; height: 28px;
-  border: 1.5px solid rgba(0,212,170,0.6);
-  border-radius: 50%;
-  position: fixed; top: 0; left: 0;
-  z-index: 9998; pointer-events: none;
-  will-change: transform;
-}
 
 /* ── AURORA — smooth, no filter animation ── */
 .aurora {
@@ -252,28 +234,6 @@ const tkA = ["Campus Feed 🔥", "Drop a Post ✨", "Find Your People 💜", "Re
 const tkB = ["CampusConnect 🌐", "Like · Comment · Share 💥", "Stories 📸", "No Cap 🧢", "Built Different 🏗️", "Your Feed Your Rules 🎯", "Go Off 🚀", "W Platform 🏆",
     "CampusConnect 🌐", "Like · Comment · Share 💥", "Stories 📸", "No Cap 🧢", "Built Different 🏗️", "Your Feed Your Rules 🎯", "Go Off 🚀", "W Platform 🏆"];
 
-/* ── CURSOR LERP (RAF) ─────── */
-function initCursor() {
-    if (typeof window === "undefined") return;
-    let mx = 0, my = 0, rx = 0, ry = 0;
-    let dot, ring, started = false;
-
-    const tick = () => {
-        if (!dot) dot = document.getElementById("ccdot");
-        if (!ring) ring = document.getElementById("ccring");
-        rx += (mx - rx) * 0.14;
-        ry += (my - ry) * 0.14;
-        if (dot) dot.style.transform = `translate3d(${mx - 4}px,${my - 4}px,0)`;
-        if (ring) ring.style.transform = `translate3d(${rx - 14}px,${ry - 14}px,0)`;
-        requestAnimationFrame(tick);
-    };
-
-    window.addEventListener("mousemove", (e) => {
-        mx = e.clientX; my = e.clientY;
-        if (!started) { started = true; requestAnimationFrame(tick); }
-    }, { passive: true });
-}
-
 /* ── TILT (RAF + passive) ──── */
 let tiltFrame = null;
 function onTilt(e) {
@@ -292,8 +252,6 @@ function offTilt(e) {
     e.currentTarget.style.transform = "perspective(900px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)";
 }
 
-initCursor();
-
 /* ── COMPONENT ─────────────── */
 function Landing() {
     const { isAuthenticated } = useAuth();
@@ -302,20 +260,16 @@ function Landing() {
         <div className="lp dotgrid">
             <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
-            {/* Cursor elements */}
-            <div id="ccdot" className="cc-dot" />
-            <div id="ccring" className="cc-ring" />
-
-            {/* Static layers */}
+            
             <div className="aurora" />
             <div className="noise" />
 
             <Navbar />
 
-            {/* ══════════ HERO ══════════ */}
+            
             <section className="relative min-h-[92vh] flex items-center" style={{ zIndex: 2 }}>
 
-                {/* Stickers */}
+                
                 <span className="stk stk-float" style={{ top: "10%", left: "3%", fontSize: "2.4rem", animationDelay: "0s" }}>🚀</span>
                 <span className="stk stk-floatr" style={{ top: "8%", right: "5%", fontSize: "2rem", animationDelay: "0.5s" }}>✨</span>
                 <span className="stk stk-wobble" style={{ top: "22%", right: "2%", fontSize: "2.4rem", animationDelay: "1s" }}>🔥</span>
@@ -326,7 +280,7 @@ function Landing() {
                 <div className="max-w-6xl mx-auto px-5 sm:px-8 w-full pt-20 pb-16">
                     <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-                        {/* LEFT */}
+                        
                         <div>
                             <div className="fu fu1 inline-flex items-center gap-2.5 rounded-full tag-pk px-4 py-2 text-xs font-bold tracking-widest uppercase mb-7">
                                 <span className="live-p w-2 h-2 rounded-full inline-block" style={{ background: "#00D4AA" }} />
@@ -358,7 +312,7 @@ function Landing() {
                                 )}
                             </div>
 
-                            {/* Social proof */}
+                            
                             <div className="fu fu4 flex items-center gap-3 mb-10">
                                 <div className="flex -space-x-2">
                                     {[["MD", "av-pk"], ["TC", "av-cy"], ["SR", "av-vo"], ["RK", "av-pk"]].map(([init, cls], n) => (
@@ -371,7 +325,7 @@ function Landing() {
                                 </div>
                             </div>
 
-                            {/* Stats */}
+                            
                             <div className="fu fu5 grid grid-cols-4 gap-2.5">
                                 {stats.map(s => (
                                     <div key={s.num} className="stat-c glass rounded-2xl p-3.5 text-center cursor-default">
@@ -382,19 +336,19 @@ function Landing() {
                             </div>
                         </div>
 
-                        {/* RIGHT — tilt card */}
+                        
                         <div className="slr relative"
                             style={{ transformStyle: "preserve-3d", transition: "transform 0.1s linear", willChange: "transform" }}
                             onMouseMove={onTilt}
                             onMouseLeave={offTilt}>
 
-                            {/* Static glow blobs */}
+                            
                             <div className="absolute -top-14 -left-14 w-56 h-56 rounded-full pointer-events-none"
                                 style={{ background: "radial-gradient(circle,rgba(108,99,255,0.14) 0%,transparent 70%)" }} />
                             <div className="absolute -bottom-10 -right-10 w-48 h-48 rounded-full pointer-events-none"
                                 style={{ background: "radial-gradient(circle,rgba(0,212,170,0.12) 0%,transparent 70%)" }} />
 
-                            {/* Notification pops */}
+                            
                             <div className="npop npop-1 absolute -top-4 -right-3 glass-ind rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5 z-20"
                                 style={{ minWidth: 206 }}>
                                 <div className="av av-cy" style={{ width: 28, height: 28, fontSize: 11 }}>NK</div>
@@ -413,7 +367,7 @@ function Landing() {
                                 </div>
                             </div>
 
-                            {/* Feed card */}
+                            
                             <div className="glass rounded-3xl p-5 relative z-10"
                                 style={{ boxShadow: "0 0 44px rgba(108,99,255,0.10)" }}>
 
@@ -425,7 +379,7 @@ function Landing() {
                                     <span className="tag-pk rounded-full px-2.5 py-0.5 text-[10px] font-bold">🔥 Trending</span>
                                 </div>
 
-                                {/* Post 1 */}
+                                
                                 <div className="post-c glass-ind rounded-2xl p-4 mb-3">
                                     <div className="flex items-start gap-3 mb-3">
                                         <div className="av av-pk">MD</div>
@@ -450,7 +404,7 @@ function Landing() {
                                     </div>
                                 </div>
 
-                                {/* Post 2 */}
+                                
                                 <div className="post-c glass-teal rounded-2xl p-4 mb-3">
                                     <div className="flex items-start gap-3 mb-3">
                                         <div className="av av-cy">TC</div>
@@ -474,7 +428,7 @@ function Landing() {
                                     </div>
                                 </div>
 
-                                {/* Teaser */}
+                                
                                 <div className="glass rounded-2xl px-4 py-2.5 flex items-center gap-3">
                                     <div className="av av-vo" style={{ width: 28, height: 28, fontSize: 11 }}>SR</div>
                                     <p className="text-white/35 text-xs flex-1">Sarah dropped a Design Club event…</p>
@@ -486,7 +440,7 @@ function Landing() {
                     </div>
                 </div>
 
-                {/* Scroll cue */}
+                
                 <div className="scroll-b absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-25 pointer-events-none">
                     <span className="text-[9px] text-white/40 tracking-widest uppercase">Scroll</span>
                     <svg width="14" height="20" viewBox="0 0 14 20" fill="none">
@@ -495,7 +449,7 @@ function Landing() {
                 </div>
             </section>
 
-            {/* ══════════ TICKER ══════════ */}
+            
             <div style={{ position: "relative", zIndex: 2 }}>
                 <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(108,99,255,0.5),rgba(0,212,170,0.5),transparent)" }} />
 
@@ -528,7 +482,7 @@ function Landing() {
                 <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(0,212,170,0.35),rgba(167,139,250,0.35),transparent)" }} />
             </div>
 
-            {/* ══════════ FEATURES ══════════ */}
+            
             <section className="relative py-28" style={{ zIndex: 2 }}>
                 <span className="stk stk-float" style={{ top: "4%", right: "2%", fontSize: "2rem", animationDelay: "1s" }}>🌐</span>
                 <span className="stk stk-wobble" style={{ bottom: "4%", left: "1.5%", fontSize: "1.7rem", animationDelay: "0.4s" }}>💥</span>
@@ -561,7 +515,7 @@ function Landing() {
                         ))}
                     </div>
 
-                    {/* Social proof numbers */}
+                    
                     <div className="mt-10 grid sm:grid-cols-3 gap-4 text-center">
                         {proofStats.map((s, i) => (
                             <div key={i} className="glass rounded-2xl py-6 px-4">
@@ -574,7 +528,7 @@ function Landing() {
                 </div>
             </section>
 
-            {/* ══════════ CTA ══════════ */}
+            
             <section className="max-w-6xl mx-auto px-5 sm:px-8 pb-28" style={{ position: "relative", zIndex: 2 }}>
                 <span className="stk stk-float" style={{ top: "-16px", right: "9%", fontSize: "2.2rem", animationDelay: "0.6s" }}>🎉</span>
                 <span className="stk stk-wobble" style={{ bottom: "-8px", left: "7%", fontSize: "1.7rem", animationDelay: "1.3s" }}>🏆</span>

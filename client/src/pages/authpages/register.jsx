@@ -399,11 +399,11 @@ function Register() {
         <div className="register-root min-h-screen mesh-bg grid-bg noise flex items-center justify-center px-5 py-12 relative overflow-hidden">
             <style dangerouslySetInnerHTML={{ __html: styles }} />
 
-            {/* Ambient orbs */}
+            
             <div className="orb-indigo absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none" />
             <div className="orb-teal absolute -bottom-32 -right-32 w-[440px] h-[440px] rounded-full pointer-events-none" />
 
-            {/* Back link */}
+            
             <Link
                 to="/"
                 className="absolute top-6 left-6 flex items-center gap-2 text-sm text-white/25 hover:text-white/60 transition z-10"
@@ -415,7 +415,7 @@ function Register() {
             </Link>
 
             <div className="w-full max-w-[420px] card-enter">
-                {/* Logo / brand */}
+                
                 <div className="s1 text-center mb-8">
                     <div className="inline-flex items-center gap-2 accent-tag rounded-full px-4 py-1.5 text-xs font-semibold mb-5 tracking-wide">
                         ✦ CampusConnect
@@ -428,10 +428,10 @@ function Register() {
                     </p>
                 </div>
 
-                {/* Card */}
+                
                 <div className="glass-card rounded-3xl p-7">
 
-                    {/* Error */}
+                    
                     {error && (
                         <div className="error-box mb-5 rounded-2xl border border-red-500/20 bg-red-500/6 px-4 py-3 flex items-start gap-2.5">
                             <span className="text-red-400 mt-0.5 flex-shrink-0">⚠</span>
@@ -439,7 +439,7 @@ function Register() {
                         </div>
                     )}
 
-                    {/* Google signup first */}
+                    
                     <div className="s2 mb-4">
                         <button
                             className="social-btn"
@@ -460,11 +460,11 @@ function Register() {
                         </button>
                     </div>
 
-                    {/* Divider */}
+                    
                     <div className="s3 or-divider mb-5">or continue with email</div>
 
                     <form onSubmit={handleSubmit}>
-                        {/* Name + Username row */}
+                        
                         <div className="s4 flex gap-3 mb-4">
                             <div className="flex-1">
                                 <label className="field-label">Full Name</label>
@@ -502,7 +502,7 @@ function Register() {
                             </div>
                         </div>
 
-                        {/* Email */}
+                        
                         <div className="s5 mb-4">
                             <label className="field-label">Email address</label>
                             <div className="relative">
@@ -521,7 +521,7 @@ function Register() {
                             </div>
                         </div>
 
-                        {/* Password */}
+                        
                         <div className="s6 mb-5">
                             <label className="field-label">Password</label>
                             <div className="relative">
@@ -543,7 +543,7 @@ function Register() {
                                     <EyeIcon open={showPw} />
                                 </button>
                             </div>
-                            {/* Password strength bar */}
+                            
                             {formData.password && (
                                 <div className="mt-2 flex items-center gap-2">
                                     <div className="flex-1 h-[3px] rounded-full bg-white/5 overflow-hidden">
@@ -565,7 +565,7 @@ function Register() {
                             )}
                         </div>
 
-                        {/* Submit */}
+                        
                         <div className="s7">
                             <button type="submit" className="submit-btn" disabled={loading}>
                                 {loading ? (
@@ -581,7 +581,7 @@ function Register() {
                     </form>
                 </div>
 
-                {/* Footer */}
+                
                 <p className="s8 text-white/30 text-[13px] text-center mt-6">
                     Already have an account?{" "}
                     <Link

@@ -18,11 +18,11 @@ const {
 
 const protect = require("../middleware/authMiddleware");
 
-// Public routes
+
 router.get("/", getAllPosts);
 router.get("/user/:userId", getUserPosts);
 
-// Private routes
+
 router.get("/my-posts", protect, getMyPosts);
 router.get("/stories", protect, getStories);
 router.get("/bookmarked", protect, getBookmarkedPosts);

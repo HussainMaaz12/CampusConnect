@@ -304,14 +304,14 @@ function Login() {
                 setGoogleLoading(true);
                 setError("");
 
-                // Get user info from Google using the access token
+                
                 const googleUserInfo = await fetch(
                     "https://www.googleapis.com/oauth2/v3/userinfo",
                     { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } }
                 );
                 const googleUser = await googleUserInfo.json();
 
-                // Send to our backend
+                
                 const response = await api.post("/auth/google", {
                     credential: tokenResponse.access_token,
                     googleUser,
@@ -337,11 +337,11 @@ function Login() {
         <div className="login-root min-h-screen mesh-bg grid-bg noise flex items-center justify-center px-5 py-12 relative overflow-hidden">
             <style dangerouslySetInnerHTML={{ __html: styles }} />
 
-            {/* Ambient orbs */}
+            
             <div className="orb-indigo absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none" />
             <div className="orb-teal absolute -bottom-32 -right-32 w-[440px] h-[440px] rounded-full pointer-events-none" />
 
-            {/* Back link */}
+            
             <Link
                 to="/"
                 className="absolute top-6 left-6 flex items-center gap-2 text-sm text-white/25 hover:text-white/60 transition z-10"
@@ -353,7 +353,7 @@ function Login() {
             </Link>
 
             <div className="w-full max-w-[420px] card-enter">
-                {/* Logo / brand */}
+                
                 <div className="s1 text-center mb-8">
                     <div className="inline-flex items-center gap-2 accent-tag rounded-full px-4 py-1.5 text-xs font-semibold mb-5 tracking-wide">
                         ✦ CampusConnect
@@ -366,10 +366,10 @@ function Login() {
                     </p>
                 </div>
 
-                {/* Card */}
+                
                 <div className="glass-card rounded-3xl p-7">
 
-                    {/* Error */}
+                    
                     {error && (
                         <div className="error-box mb-5 rounded-2xl border border-red-500/20 bg-red-500/6 px-4 py-3 flex items-start gap-2.5">
                             <span className="text-red-400 mt-0.5 flex-shrink-0">⚠</span>
@@ -378,7 +378,7 @@ function Login() {
                     )}
 
                     <form onSubmit={handleSubmit}>
-                        {/* Email */}
+                        
                         <div className="s2 mb-4">
                             <label className="field-label">Email address</label>
                             <div className="relative">
@@ -397,7 +397,7 @@ function Login() {
                             </div>
                         </div>
 
-                        {/* Password */}
+                        
                         <div className="s3 mb-5">
                             <div className="flex items-center justify-between mb-2">
                                 <label className="field-label" style={{ marginBottom: 0 }}>Password</label>
@@ -430,7 +430,7 @@ function Login() {
                             </div>
                         </div>
 
-                        {/* Submit */}
+                        
                         <div className="s4">
                             <button type="submit" className="submit-btn" disabled={loading}>
                                 {loading ? (
@@ -445,10 +445,10 @@ function Login() {
                         </div>
                     </form>
 
-                    {/* Divider */}
+                    
                     <div className="s5 or-divider my-5">or</div>
 
-                    {/* Google login */}
+                    
                     <div className="s5">
                         <button
                             className="social-btn"
@@ -470,7 +470,7 @@ function Login() {
                     </div>
                 </div>
 
-                {/* Footer */}
+                
                 <p className="s6 text-white/25 text-[13px] text-center mt-6">
                     New to CampusConnect?{" "}
                     <Link

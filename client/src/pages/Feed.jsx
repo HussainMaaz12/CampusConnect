@@ -423,10 +423,10 @@ function Feed() {
                 <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20 sm:pb-6">
                     <div className="flex gap-7">
 
-                        {/* ════════════ MAIN FEED COLUMN ════════════ */}
+                        
                         <div className="flex-1 min-w-0">
 
-                            {/* Header */}
+                            
                             <div className="mb-6 fade-in">
                                 <h1 className="text-[1.7rem] sm:text-[2rem] font-extrabold leading-tight mb-1">
                                     <span className="grad-text">Campus Feed</span> ✨
@@ -436,7 +436,7 @@ function Feed() {
                                 </p>
                             </div>
 
-                            {/* ── Story Bar ── */}
+                            
                             {stories.length > 0 && (
                                 <div className="mb-5 fade-in" style={{ animationDelay: '.02s' }}>
                                     <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
@@ -454,7 +454,7 @@ function Feed() {
                                 </div>
                             )}
 
-                            {/* Error */}
+                            
                             {error && (
                                 <div className="err-shake mb-4 rounded-2xl border border-red-500/15 bg-red-500/6 px-4 py-3 flex items-center gap-2.5">
                                     <span className="text-red-400 text-sm">⚠</span>
@@ -463,75 +463,85 @@ function Feed() {
                                 </div>
                             )}
 
-                            {/* ── Compose ── */}
-                            <div className="glass-compose p-5 mb-5 fade-in" style={{ animationDelay: '.04s' }}>
-                                <div className="flex gap-3">
-                                    <Avatar name={authUser?.name} avatar={authUser?.avatar} size={38} online={isOnline(authUser?._id)} />
-                                    <div className="flex-1">
-                                        <form onSubmit={handleCreatePost}>
-                                            <textarea
-                                                value={postContent}
-                                                onChange={e => setPostContent(e.target.value)}
-                                                placeholder={postType === "story" ? "Share a story… 📸" : "What's happening on campus? 💭"}
-                                                rows="2"
-                                                className="f-input !border-0 !bg-transparent !p-0 !text-[15px] !rounded-none mb-3"
-                                                style={{ boxShadow: 'none' }}
-                                                maxLength={2000}
-                                            />
+                            
+                            {authUser?.canPost || authUser?.role === 'admin' ? (
+                                <div className="glass-compose p-5 mb-5 fade-in" style={{ animationDelay: '.04s' }}>
+                                    <div className="flex gap-3">
+                                        <Avatar name={authUser?.name} avatar={authUser?.avatar} size={38} online={isOnline(authUser?._id)} />
+                                        <div className="flex-1">
+                                            <form onSubmit={handleCreatePost}>
+                                                <textarea
+                                                    value={postContent}
+                                                    onChange={e => setPostContent(e.target.value)}
+                                                    placeholder={postType === "story" ? "Share a story… 📸" : "What's happening on campus? 💭"}
+                                                    rows="2"
+                                                    className="f-input !border-0 !bg-transparent !p-0 !text-[15px] !rounded-none mb-3"
+                                                    style={{ boxShadow: 'none' }}
+                                                    maxLength={2000}
+                                                />
 
-                                            {/* Media previews */}
-                                            {mediaFiles.length > 0 && (
-                                                <div className="media-preview">
-                                                    {mediaFiles.map((f, i) => (
-                                                        <div key={i} className="media-thumb">
-                                                            {f.type === "video" ? (
-                                                                <video src={f.preview} />
-                                                            ) : (
-                                                                <img src={f.preview} alt="" />
-                                                            )}
-                                                            <button className="media-thumb-remove" onClick={() => removeMedia(i)}>✕</button>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
+                                                
+                                                {mediaFiles.length > 0 && (
+                                                    <div className="media-preview">
+                                                        {mediaFiles.map((f, i) => (
+                                                            <div key={i} className="media-thumb">
+                                                                {f.type === "video" ? (
+                                                                    <video src={f.preview} />
+                                                                ) : (
+                                                                    <img src={f.preview} alt="" />
+                                                                )}
+                                                                <button className="media-thumb-remove" onClick={() => removeMedia(i)}>✕</button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
 
-                                            <div className="flex items-center justify-between pt-3 border-t border-white/[0.04]">
-                                                <div className="flex items-center gap-2">
-                                                    {/* Media upload */}
-                                                    <button type="button" onClick={() => mediaInputRef.current?.click()} className="p-2 rounded-lg text-white/25 hover:text-white/60 hover:bg-white/[0.04] transition" title="Add photo/video">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                                <div className="flex items-center justify-between pt-3 border-t border-white/[0.04]">
+                                                    <div className="flex items-center gap-2">
+                                                        
+                                                        <button type="button" onClick={() => mediaInputRef.current?.click()} className="p-2 rounded-lg text-white/25 hover:text-white/60 hover:bg-white/[0.04] transition" title="Add photo/video">
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                                        </button>
+                                                        <input ref={mediaInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleMediaSelect} />
+
+                                                        
+                                                        <button type="button" onClick={() => setPostType(postType === "post" ? "story" : "post")}
+                                                            className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition"
+                                                            style={{
+                                                                background: postType === "story" ? "rgba(255,217,61,0.10)" : "rgba(255,255,255,0.03)",
+                                                                color: postType === "story" ? "#FFD93D" : "rgba(255,255,255,0.25)",
+                                                                border: `1px solid ${postType === "story" ? "rgba(255,217,61,0.20)" : "rgba(255,255,255,0.04)"}`,
+                                                            }}
+                                                        >
+                                                            {postType === "story" ? "📸 Story" : "📝 Post"}
+                                                        </button>
+
+                                                        <select value={postCategory} onChange={e => setPostCategory(e.target.value)} className="f-select !py-1.5 !px-2.5 !text-[11px]">
+                                                            {categories.map(c => <option key={c} value={c}>{catCfg[c]?.emoji} {c}</option>)}
+                                                        </select>
+                                                        {postContent.length > 0 && (
+                                                            <span className="text-[10px] text-white/15 tabular-nums">{postContent.length}/2000</span>
+                                                        )}
+                                                    </div>
+                                                    <button type="submit" className="cta-btn" disabled={creatingPost || (!postContent.trim() && mediaFiles.length === 0)}>
+                                                        {creatingPost ? <><span className="f-spinner"/>Posting…</> : postType === "story" ? "Share Story →" : "Post →"}
                                                     </button>
-                                                    <input ref={mediaInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleMediaSelect} />
-
-                                                    {/* Post type toggle */}
-                                                    <button type="button" onClick={() => setPostType(postType === "post" ? "story" : "post")}
-                                                        className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition"
-                                                        style={{
-                                                            background: postType === "story" ? "rgba(255,217,61,0.10)" : "rgba(255,255,255,0.03)",
-                                                            color: postType === "story" ? "#FFD93D" : "rgba(255,255,255,0.25)",
-                                                            border: `1px solid ${postType === "story" ? "rgba(255,217,61,0.20)" : "rgba(255,255,255,0.04)"}`,
-                                                        }}
-                                                    >
-                                                        {postType === "story" ? "📸 Story" : "📝 Post"}
-                                                    </button>
-
-                                                    <select value={postCategory} onChange={e => setPostCategory(e.target.value)} className="f-select !py-1.5 !px-2.5 !text-[11px]">
-                                                        {categories.map(c => <option key={c} value={c}>{catCfg[c]?.emoji} {c}</option>)}
-                                                    </select>
-                                                    {postContent.length > 0 && (
-                                                        <span className="text-[10px] text-white/15 tabular-nums">{postContent.length}/2000</span>
-                                                    )}
                                                 </div>
-                                                <button type="submit" className="cta-btn" disabled={creatingPost || (!postContent.trim() && mediaFiles.length === 0)}>
-                                                    {creatingPost ? <><span className="f-spinner"/>Posting…</> : postType === "story" ? "Share Story →" : "Post →"}
-                                                </button>
-                                            </div>
-                                        </form>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="glass-compose p-6 mb-5 fade-in text-center flex flex-col items-center justify-center gap-2" style={{ animationDelay: '.04s', borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.1)' }}>
+                                    <div className="w-10 h-10 rounded-full bg-white/[0.03] flex items-center justify-center mb-1">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                    </div>
+                                    <p className="text-white/80 font-bold text-[15px]">Read-Only Mode</p>
+                                    <p className="text-[13px] text-white/40 max-w-[80%]">You currently do not have permission to post. Please wait for the Master Developer to grant you access.</p>
+                                </div>
+                            )}
 
-                            {/* ── Search + Category chips ── */}
+                            
                             <div className="mb-5 fade-in" style={{ animationDelay: '.08s' }}>
                                 <div className="search-wrap flex items-center px-3.5 gap-2 mb-3">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -551,7 +561,7 @@ function Feed() {
                                 )}
                             </div>
 
-                            {/* ── Posts ── */}
+                            
                             <div className="space-y-4">
                                 {loadingPosts ? <SkeletonFeed count={3} /> :
                                  filteredPosts.length === 0 ? (
@@ -565,7 +575,7 @@ function Feed() {
 
                                     return (
                                         <div key={post._id} className={`glass-post p-5 fade-in ${editing ? "!border-[#6C63FF]/20" : ""}`} style={{ animationDelay: `${Math.min(idx * 0.03, 0.25)}s` }}>
-                                            {/* Header */}
+                                            
                                             <div className="flex items-start justify-between gap-3 mb-2.5">
                                                 <div className="flex items-center gap-2.5">
                                                     <Link to={`/user/${post.author?.username}`}>
@@ -591,7 +601,7 @@ function Feed() {
                                                 )}
                                             </div>
 
-                                            {/* Content */}
+                                            
                                             {editing ? (
                                                 <div className="mb-3 space-y-2.5">
                                                     <textarea value={editContent} onChange={e => setEditContent(e.target.value)} rows="3" className="f-input" />
@@ -607,10 +617,10 @@ function Feed() {
                                                 <p className="text-white/65 text-[14px] leading-[1.65] mb-3 whitespace-pre-wrap">{post.content}</p>
                                             )}
 
-                                            {/* Media */}
+                                            
                                             {!editing && <MediaGrid media={post.media} />}
 
-                                            {/* Actions */}
+                                            
                                             <div className="flex items-center gap-1 pt-2.5 border-t border-white/[0.03]">
                                                 <button onClick={() => handleToggleLike(post._id)} disabled={likingPostId === post._id} className={`act-btn ${liked ? "liked" : ""}`}>
                                                     <span className={liked && likingPostId !== post._id ? "heart-pop" : ""}>{liked ? "❤️" : "🤍"}</span>
@@ -632,7 +642,7 @@ function Feed() {
                                                 </span>
                                             </div>
 
-                                            {/* Comments */}
+                                            
                                             <div className={`cmts-wrap ${cmtOpen ? "open" : ""}`}>
                                                 <div className="pt-3 mt-2.5 border-t border-white/[0.03]">
                                                     <div className="flex gap-2.5 mb-3">
@@ -667,10 +677,10 @@ function Feed() {
                             </div>
                         </div>
 
-                        {/* ════════════ RIGHT SIDEBAR ════════════ */}
+                        
                         <aside className="hidden lg:block w-[340px] flex-shrink-0 space-y-5 sticky top-[72px] self-start max-h-[calc(100vh-90px)] overflow-y-auto no-scrollbar">
 
-                            {/* ── Online Users ── */}
+                            
                             {onlineUsers.length > 0 && (
                                 <div className="glass-sidebar p-5 fade-in" style={{ animationDelay: '.08s' }}>
                                     <div className="flex items-center gap-2 mb-4">
@@ -688,7 +698,7 @@ function Feed() {
                                 </div>
                             )}
 
-                            {/* ── Activity Stats ── */}
+                            
                             <div className="glass-sidebar p-6 fade-in" style={{ animationDelay: '.1s' }}>
                                 <div className="flex items-center gap-2 mb-5">
                                     <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#6C63FF]/20 to-[#00D4AA]/10 flex items-center justify-center">
@@ -712,7 +722,7 @@ function Feed() {
                                 </div>
                             </div>
 
-                            {/* ── Who to Follow ── */}
+                            
                             {suggestions.length > 0 && (
                                 <div className="glass-sidebar p-6 fade-in" style={{ animationDelay: '.15s' }}>
                                     <h3 className="text-white/60 text-[12px] font-bold tracking-wider uppercase mb-4">Who to Follow</h3>
@@ -735,7 +745,7 @@ function Feed() {
                                 </div>
                             )}
 
-                            {/* ── Trending Categories ── */}
+                            
                             <div className="glass-sidebar p-6 fade-in" style={{ animationDelay: '.2s' }}>
                                 <h3 className="text-white/60 text-[12px] font-bold tracking-wider uppercase mb-4">🔥 Trending</h3>
                                 <div className="space-y-1">
@@ -751,7 +761,7 @@ function Feed() {
                                 </div>
                             </div>
 
-                            {/* ── Profile Card ── */}
+                            
                             <div className="fade-in" style={{ animationDelay: '.25s' }}>
                                 <div className="rounded-2xl p-[1px] bg-gradient-to-br from-[#6C63FF]/20 via-[#A78BFA]/10 to-[#00D4AA]/10">
                                     <div className="glass-sidebar !border-0 p-5">
@@ -770,7 +780,7 @@ function Feed() {
                                 </div>
                             </div>
 
-                            {/* ── Footer ── */}
+                            
                             <div className="px-4 pt-2 pb-4 fade-in" style={{ animationDelay: '.3s' }}>
                                 <div className="flex items-center gap-1.5 mb-2">
                                     <div className="w-4 h-4 rounded flex items-center justify-center text-[7px] font-bold text-white" style={{ background: "linear-gradient(135deg, #6C63FF, #00D4AA)" }}>C</div>
@@ -784,7 +794,7 @@ function Feed() {
                 </div>
             </div>
 
-            {/* Story Modal */}
+            
             {storyModal && (() => {
                 const stories = storyModal.stories;
                 const current = stories[activeStoryIndex];
@@ -795,9 +805,9 @@ function Feed() {
                     <div className="lightbox-overlay backdrop-blur-md" onClick={() => setStoryModal(null)} style={{ zIndex: 1000 }}>
                         <div className="relative flex items-center justify-center w-full h-full max-w-md mx-auto" onClick={e => e.stopPropagation()}>
                             
-                            {/* Prev Click Area */}
+                            
                             <div className="absolute left-0 top-0 bottom-0 w-[40%] z-10 cursor-pointer" onClick={prev} />
-                            {/* Next Click Area */}
+                            
                             <div className="absolute right-0 top-0 bottom-0 w-[60%] z-10 cursor-pointer" onClick={next} />
 
                             <div className="absolute top-4 left-0 right-0 z-20 px-4 flex gap-1">
@@ -843,34 +853,34 @@ function Feed() {
                 );
             })()}
 
-            {/* Share Modal */}
+            
             {shareModal && (
                 <div className="lightbox-overlay backdrop-blur-md" style={{ zIndex: 2000 }} onClick={() => setShareModal(null)}>
                     <div className="bg-[#151520] border border-white/[0.1] rounded-3xl p-6 max-w-[320px] w-full mx-4 shadow-2xl relative" onClick={e => e.stopPropagation()}>
                         <h3 className="text-white text-lg font-bold mb-5 text-center font-syne">Share Post</h3>
                         <div className="grid grid-cols-4 gap-3 mb-6">
-                            {/* WhatsApp */}
+                            
                             <a href={`https://wa.me/?text=Check out this post on CampusConnect: ${encodeURIComponent(`${window.location.origin}/feed#${shareModal._id}`)}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group relative z-10">
                                 <div className="w-12 h-12 rounded-full bg-[#25D366] flex flex-col items-center justify-center text-white group-hover:scale-110 transition duration-300 shadow-lg shadow-[#25D366]/20">
                                     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.82 9.82 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
                                 </div>
                                 <span className="text-white/60 text-[10px] font-medium">WhatsApp</span>
                             </a>
-                            {/* Twitter */}
+                            
                             <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(`${window.location.origin}/feed#${shareModal._id}`)}&text=${encodeURIComponent("Check this out on CampusConnect!")}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group relative z-10">
                                 <div className="w-12 h-12 rounded-full bg-black border border-white/10 flex flex-col items-center justify-center text-white group-hover:scale-110 transition duration-300 shadow-lg shadow-black/40">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                                 </div>
                                 <span className="text-white/60 text-[10px] font-medium">X</span>
                             </a>
-                            {/* Email */}
+                            
                             <a href={`mailto:?subject=CampusConnect Post&body=Check out this post: ${encodeURIComponent(`${window.location.origin}/feed#${shareModal._id}`)}`} className="flex flex-col items-center gap-2 group relative z-10">
                                 <div className="w-12 h-12 rounded-full bg-[#EA4335] flex items-center justify-center text-white group-hover:scale-110 transition duration-300 shadow-lg shadow-[#EA4335]/20">
                                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                                 </div>
                                 <span className="text-white/60 text-[10px] font-medium">Email</span>
                             </a>
-                            {/* Copy Link */}
+                            
                             <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/feed#${shareModal._id}`); setShareModal(null); }} className="flex flex-col items-center gap-2 group relative z-10">
                                 <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white group-hover:scale-110 transition duration-300 shadow-lg shadow-white/5">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m-6 12h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z"/></svg>

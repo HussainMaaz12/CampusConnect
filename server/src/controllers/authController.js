@@ -6,16 +6,16 @@ const { uploadToCloudinary } = require("../config/cloudinary");
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Generate JWT token
+
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
         expiresIn: "7d",
     });
 };
 
-// @desc    Register user
-// @route   POST /api/auth/register
-// @access  Public
+
+
+
 const registerUser = async (req, res) => {
     try {
         const { name, username, email, password } = req.body;
@@ -68,6 +68,8 @@ const registerUser = async (req, res) => {
                 email: user.email,
                 bio: user.bio,
                 avatar: user.avatar,
+                role: user.role,
+                canPost: user.canPost,
                 followers: user.followers || [],
                 following: user.following || [],
             },
@@ -82,9 +84,9 @@ const registerUser = async (req, res) => {
     }
 };
 
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
+
+
+
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -127,6 +129,8 @@ const loginUser = async (req, res) => {
                 email: user.email,
                 bio: user.bio,
                 avatar: user.avatar,
+                role: user.role,
+                canPost: user.canPost,
                 followers: user.followers || [],
                 following: user.following || [],
             },
@@ -141,9 +145,9 @@ const loginUser = async (req, res) => {
     }
 };
 
-// @desc    Get current logged-in user
-// @route   GET /api/auth/me
-// @access  Private
+
+
+
 const getMe = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
@@ -156,6 +160,8 @@ const getMe = async (req, res) => {
                 email: user.email,
                 bio: user.bio,
                 avatar: user.avatar,
+                role: user.role,
+                canPost: user.canPost,
                 followers: user.followers || [],
                 following: user.following || [],
             },
@@ -170,9 +176,9 @@ const getMe = async (req, res) => {
     }
 };
 
-// @desc    Update current user's profile
-// @route   PUT /api/auth/update-profile
-// @access  Private
+
+
+
 const updateProfile = async (req, res) => {
     try {
         const { name, bio, avatar } = req.body;
@@ -196,16 +202,16 @@ const updateProfile = async (req, res) => {
 
         if (avatar !== undefined) {
             if (avatar === "") {
-                // Clear avatar
+                
                 user.avatar = "";
             } else if (typeof avatar === "string" && avatar.startsWith("data:")) {
-                // Upload base64 to Cloudinary
+                
                 try {
                     const result = await uploadToCloudinary(avatar, "campusconnect/avatars", "image");
                     user.avatar = result.url;
                 } catch (uploadErr) {
                     console.error("Avatar upload error:", uploadErr.message);
-                    // Fallback: store as base64 if Cloudinary fails
+                    
                     if (avatar.length < 2_000_000) {
                         user.avatar = avatar;
                     }
@@ -227,6 +233,8 @@ const updateProfile = async (req, res) => {
                 email: user.email,
                 bio: user.bio,
                 avatar: user.avatar,
+                role: user.role,
+                canPost: user.canPost,
                 followers: user.followers || [],
                 following: user.following || [],
             },
@@ -241,9 +249,9 @@ const updateProfile = async (req, res) => {
     }
 };
 
-// @desc    Get public profile by username
-// @route   GET /api/auth/profile/:username
-// @access  Public
+
+
+
 const getPublicProfile = async (req, res) => {
     try {
         const user = await User.findOne({ username: req.params.username.toLowerCase() })
@@ -271,9 +279,9 @@ const getPublicProfile = async (req, res) => {
     }
 };
 
-// @desc    Toggle follow/unfollow a user
-// @route   PUT /api/auth/follow/:userId
-// @access  Private
+
+
+
 const toggleFollow = async (req, res) => {
     try {
         const targetUserId = req.params.userId;
@@ -301,7 +309,7 @@ const toggleFollow = async (req, res) => {
         );
 
         if (isFollowing) {
-            // Unfollow
+            
             currentUser.following = currentUser.following.filter(
                 (id) => id.toString() !== targetUserId
             );
@@ -309,7 +317,7 @@ const toggleFollow = async (req, res) => {
                 (id) => id.toString() !== currentUserId
             );
         } else {
-            // Follow
+            
             currentUser.following.push(targetUserId);
             targetUser.followers.push(currentUserId);
         }
@@ -332,9 +340,9 @@ const toggleFollow = async (req, res) => {
     }
 };
 
-// @desc    Get suggested users to follow
-// @route   GET /api/auth/suggestions
-// @access  Private
+
+
+
 const getSuggestions = async (req, res) => {
     try {
         const currentUser = await User.findById(req.user._id);
@@ -358,9 +366,9 @@ const getSuggestions = async (req, res) => {
     }
 };
 
-// @desc    Google OAuth login/register
-// @route   POST /api/auth/google
-// @access  Public
+
+
+
 const googleLogin = async (req, res) => {
     try {
         const { credential, googleUser: clientGoogleUser } = req.body;
@@ -374,7 +382,7 @@ const googleLogin = async (req, res) => {
 
         let googleUserData;
 
-        // If we have an access_token (implicit flow), verify by fetching user info from Google
+        
         if (credential) {
             try {
                 const response = await fetch(
@@ -388,7 +396,7 @@ const googleLogin = async (req, res) => {
 
                 googleUserData = await response.json();
             } catch (fetchError) {
-                // Fall back to client-provided Google user data
+                
                 if (clientGoogleUser && clientGoogleUser.email) {
                     googleUserData = clientGoogleUser;
                 } else {
@@ -411,7 +419,7 @@ const googleLogin = async (req, res) => {
             });
         }
 
-        // Check if user already exists with this Google ID or email
+        
         let user = await User.findOne({
             $or: [
                 ...(googleId ? [{ googleId }] : []),
@@ -420,7 +428,7 @@ const googleLogin = async (req, res) => {
         });
 
         if (user) {
-            // Update Google ID if user exists by email but not by Google ID
+            
             if (!user.googleId && googleId) {
                 user.googleId = googleId;
                 if (picture && !user.avatar) {
@@ -429,8 +437,8 @@ const googleLogin = async (req, res) => {
                 await user.save();
             }
         } else {
-            // Create new user
-            // Generate a unique username from name
+            
+            
             const displayName = name || email.split("@")[0];
             const baseUsername = displayName
                 .toLowerCase()
@@ -465,6 +473,8 @@ const googleLogin = async (req, res) => {
                 email: user.email,
                 bio: user.bio,
                 avatar: user.avatar,
+                role: user.role,
+                canPost: user.canPost,
                 followers: user.followers || [],
                 following: user.following || [],
             },

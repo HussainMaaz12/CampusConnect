@@ -79,7 +79,7 @@ export default function SkeletonFeedCard({
     return (
         <div style={{ ...tokens.card, animationDelay: `${animationDelay}s` }}>
 
-            {/* ── Header: avatar + name + timestamp ── */}
+            
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                 <Bone
                     width={42} height={42}
@@ -95,7 +95,7 @@ export default function SkeletonFeedCard({
                 )}
             </div>
 
-            {/* ── Image placeholder ── */}
+            
             {showImage && (
                 <Bone
                     width="100%" height={190}
@@ -104,7 +104,7 @@ export default function SkeletonFeedCard({
                 />
             )}
 
-            {/* ── Text lines ── */}
+            
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
                 {Array.from({ length: lineCount }).map((_, i) => (
                     <Bone
@@ -116,7 +116,7 @@ export default function SkeletonFeedCard({
                 ))}
             </div>
 
-            {/* ── Divider ── */}
+            
             <div
                 style={{
                     height: "1px",
@@ -125,7 +125,7 @@ export default function SkeletonFeedCard({
                 }}
             />
 
-            {/* ── Action buttons row ── */}
+            
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <Bone width={62} height={28} style={{ borderRadius: "20px" }} delay={0.07} />
                 <Bone width={62} height={28} style={{ borderRadius: "20px" }} delay={0.10} />

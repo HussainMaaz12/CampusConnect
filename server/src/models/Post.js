@@ -18,7 +18,7 @@ const postSchema = new mongoose.Schema(
             enum: ["General", "Academic", "Events", "Clubs", "Lost & Found", "Hostel", "Confession"],
             default: "General",
         },
-        // Media attachments (uploaded to Cloudinary)
+        
         media: [
             {
                 url: { type: String, required: true },
@@ -26,13 +26,13 @@ const postSchema = new mongoose.Schema(
                 type: { type: String, enum: ["image", "video"], default: "image" },
             },
         ],
-        // Post type: regular post or ephemeral story
+        
         postType: {
             type: String,
             enum: ["post", "story"],
             default: "post",
         },
-        // Story expiry (24h from creation)
+        
         expiresAt: {
             type: Date,
             default: null,
@@ -59,14 +59,14 @@ const postSchema = new mongoose.Schema(
                 },
             },
         ],
-        // Bookmarks — users who saved this post
+        
         bookmarks: [
             {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "User",
             },
         ],
-        // Share count
+        
         shares: {
             type: Number,
             default: 0,
@@ -77,7 +77,7 @@ const postSchema = new mongoose.Schema(
     }
 );
 
-// Index for efficient story queries
+
 postSchema.index({ postType: 1, expiresAt: 1 });
 postSchema.index({ author: 1, createdAt: -1 });
 

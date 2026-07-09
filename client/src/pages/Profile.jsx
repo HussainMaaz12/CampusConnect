@@ -117,7 +117,7 @@ function Profile() {
                 <Navbar />
                 <div className="max-w-[900px] mx-auto px-4 sm:px-6 py-6 pb-20">
 
-                    {/* Hero Card */}
+                    
                     <div className="p-glass overflow-hidden mb-6 p-fade">
                         <div className="profile-banner" />
                         <div className="px-6 sm:px-8 pb-7 -mt-14 relative z-10">
@@ -163,13 +163,13 @@ function Profile() {
                         </div>
                     </div>
 
-                    {/* Messages */}
+                    
                     {error && <div className="mb-5 rounded-2xl border border-red-500/15 bg-red-500/6 px-4 py-3 flex items-center gap-2.5 p-fade"><span className="text-red-400 text-sm">⚠</span><p className="text-red-300/80 text-[13px] flex-1">{error}</p><button onClick={() => setError("")} className="text-red-400/30 hover:text-red-400/60 text-xs">✕</button></div>}
                     {successMessage && <div className="mb-5 rounded-2xl border border-emerald-500/15 bg-emerald-500/6 px-4 py-3 flex items-center gap-2.5 p-fade"><span className="text-emerald-400 text-sm">✓</span><p className="text-emerald-300/80 text-[13px]">{successMessage}</p></div>}
 
                     <div className="flex flex-col lg:flex-row gap-6">
                         <div className="flex-1 space-y-6">
-                            {/* Stats */}
+                            
                             <div className="grid grid-cols-3 gap-3 p-fade" style={{ animationDelay: '.06s' }}>
                                 {[
                                     { val: myPosts.length, lbl: "Posts", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6C63FF" strokeWidth="2.5"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>, grad: "from-[#6C63FF]/15 to-[#6C63FF]/5", col: "text-white/85" },
@@ -184,7 +184,7 @@ function Profile() {
                                 ))}
                             </div>
 
-                            {/* Edit Profile */}
+                            
                             <div className="p-glass p-6 sm:p-7 p-fade" style={{ animationDelay: '.1s' }}>
                                 <div className="flex items-center gap-2.5 mb-5">
                                     <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#A78BFA]/20 to-[#6C63FF]/10 flex items-center justify-center">
@@ -209,7 +209,7 @@ function Profile() {
                             </div>
                         </div>
 
-                        {/* My Posts */}
+                        
                         <div className="lg:w-[380px] flex-shrink-0">
                             <div className="p-glass p-6 sm:p-7 p-fade" style={{ animationDelay: '.14s' }}>
                                 <div className="flex items-center gap-2.5 mb-5">

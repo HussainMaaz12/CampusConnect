@@ -1,17 +1,17 @@
 import { useTheme } from "../context/ThemeContext";
 import "./ThemeToggle.css";
 
-// ─────────────────────────────────────────────────────────────
-//  ThemeToggle
-//
-//  Props:
-//    size     "sm" | "md" (default "md")
-//    showLabel  boolean (default true)
-//
-//  Usage:
-//    <ThemeToggle />
-//    <ThemeToggle size="sm" showLabel={false} />
-// ─────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
 
 export default function ThemeToggle({ size = "md", showLabel = true }) {
     const { isDark, toggleTheme } = useTheme();
@@ -31,16 +31,16 @@ export default function ThemeToggle({ size = "md", showLabel = true }) {
                 aria-pressed={isDark}
                 type="button"
             >
-                {/* Track */}
+                
                 <span className="theme-toggle__track" />
 
-                {/* Icons inside track */}
+                
                 <span className="theme-toggle__icons" aria-hidden="true">
                     <SunIcon />
                     <MoonIcon />
                 </span>
 
-                {/* Sliding thumb */}
+                
                 <span className="theme-toggle__thumb" aria-hidden="true">
                     <span className="theme-toggle__thumb-icon">
                         {isDark ? <MoonIcon /> : <SunIcon />}

@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
     const [authToken, setAuthToken] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Verify saved token with backend on app start
+    
     useEffect(() => {
         const verifyUser = async () => {
             const savedToken = localStorage.getItem("campusconnect_token");
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
         verifyUser();
     }, []);
 
-    // Save login data
+    
     const login = (user, token) => {
         setAuthUser(user);
         setAuthToken(token);
@@ -51,13 +51,13 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("campusconnect_token", token);
     };
 
-    // Update current user data after profile edit
+    
     const updateAuthUser = (updatedUser) => {
         setAuthUser(updatedUser);
         localStorage.setItem("campusconnect_user", JSON.stringify(updatedUser));
     };
 
-    // Clear login data
+    
     const logout = () => {
         setAuthUser(null);
         setAuthToken(null);

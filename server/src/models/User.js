@@ -38,7 +38,16 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
-        // Social graph
+        role: {
+            type: String,
+            enum: ['user', 'admin'],
+            default: 'user'
+        },
+        canPost: {
+            type: Boolean,
+            default: true
+        },
+        
         followers: [
             {
                 type: mongoose.Schema.Types.ObjectId,

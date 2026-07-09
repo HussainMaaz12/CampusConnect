@@ -19,7 +19,7 @@ export default function Chat() {
     const messagesEndRef = useRef(null);
     const typingTimeoutRef = useRef(null);
 
-    // Fetch conversations list on mount
+    
     useEffect(() => {
         const fetchConvos = async () => {
             try {
@@ -34,7 +34,7 @@ export default function Chat() {
                             fetchedConvos = [{ user: targetUser, lastMessage: null, unread: false }, ...fetchedConvos];
                         }
                         setActiveChat(targetUser);
-                        window.history.replaceState({}, document.title); // clear state
+                        window.history.replaceState({}, document.title); 
                     }
                     
                     setConversations(fetchedConvos);
@@ -46,7 +46,7 @@ export default function Chat() {
         fetchConvos();
     }, [location.state]);
 
-    // Socket Event: Message Receive
+    
     useEffect(() => {
         if (!socket) return;
         
@@ -54,7 +54,7 @@ export default function Chat() {
             if (activeChat && (message.sender === activeChat._id || message.receiver === activeChat._id)) {
                 setMessages(prev => [...prev, message]);
             }
-            // Update conversation list logic to bump the latest message
+            
             setConversations(prev => {
                 const existingIndex = prev.findIndex(c => c.user._id === message.sender || c.user._id === message.receiver);
                 if (existingIndex > -1) {
@@ -65,7 +65,7 @@ export default function Chat() {
                     }
                     return updated;
                 }
-                return prev; // Or trigger a re-fetch
+                return prev; 
             });
         };
 
@@ -87,7 +87,7 @@ export default function Chat() {
         };
     }, [socket, activeChat, authUser._id]);
 
-    // Fetch Messages when a chat is opened
+    
     useEffect(() => {
         if (!activeChat) return;
         
@@ -96,7 +96,7 @@ export default function Chat() {
                 const res = await api.get(`/chat/${activeChat._id}`);
                 if (res.data.success) {
                     setMessages(res.data.messages);
-                    // Clear unread badge
+                    
                     setConversations(prev => prev.map(c => c.user._id === activeChat._id ? { ...c, unread: false } : c));
                 }
             } catch (err) {
@@ -104,10 +104,10 @@ export default function Chat() {
             }
         };
         fetchMessages();
-        setIsTyping(false); // Reset typing status on switch
+        setIsTyping(false); 
     }, [activeChat]);
 
-    // Scroll to bottom when messages update
+    
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isTyping]);
@@ -146,7 +146,7 @@ export default function Chat() {
             <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:h-[calc(100vh-72px)] h-[calc(100vh-140px)]">
                 <div className="flex flex-col sm:flex-row bg-[#111116]/80 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden h-full shadow-2xl">
                     
-                    {/* Left Sidebar - Conversation List */}
+                    
                     <div className="w-full sm:w-[30%] border-r border-white/5 flex flex-col bg-[#0A0A0F]/50">
                         <div className="p-5 border-b border-white/5">
                             <h2 className="text-xl font-bold font-syne bg-clip-text text-transparent bg-gradient-to-r from-[#6C63FF] to-[#00D4AA]">Messages</h2>
@@ -184,11 +184,11 @@ export default function Chat() {
                         </div>
                     </div>
 
-                    {/* Right Panel - Chat Area */}
+                    
                     <div className="flex-1 flex flex-col bg-[#0A0A0F]/20 relative max-h-full">
                         {activeChat ? (
                             <>
-                                {/* Chat Header */}
+                                
                                 <div className="p-4 border-b border-white/5 flex items-center gap-3 bg-[#111116]/80 backdrop-blur-md sticky top-0 z-10 shrink-0">
                                     {activeChat.avatar ? (
                                         <img src={activeChat.avatar} className="w-10 h-10 rounded-full object-cover" />
@@ -201,7 +201,7 @@ export default function Chat() {
                                     </div>
                                 </div>
 
-                                {/* Messages View */}
+                                
                                 <div className="flex-1 overflow-y-auto p-5 space-y-4">
                                     {messages.map(msg => {
                                         const isMine = msg.sender === authUser._id;
@@ -225,7 +225,7 @@ export default function Chat() {
                                     <div ref={messagesEndRef} />
                                 </div>
 
-                                {/* Input Area */}
+                                
                                 <div className="p-4 border-t border-white/5 bg-[#111116]/80 backdrop-blur-md shrink-0">
                                     <form onSubmit={handleSend} className="flex gap-2 items-center">
                                         <input 

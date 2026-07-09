@@ -110,12 +110,12 @@ function UserProfile() {
                 <Navbar />
                 <div className="max-w-[900px] mx-auto px-4 sm:px-6 py-6 pb-20">
 
-                    {/* Hero Card */}
+                    
                     <div className="up-glass overflow-hidden mb-6 up-fade">
                         <div className="up-banner" />
                         <div className="px-6 sm:px-8 pb-7 -mt-16 relative z-10">
                             <div className="flex flex-col sm:flex-row items-start sm:items-end gap-5">
-                                {/* Avatar */}
+                                
                                 <div className="relative">
                                     <div className="rounded-full p-[3px]" style={{ background: "linear-gradient(135deg, #6C63FF, #00D4AA, #A78BFA)", boxShadow: "0 0 30px rgba(108,99,255,0.15)" }}>
                                         <div className="w-[110px] h-[110px] rounded-full bg-[#111] flex items-center justify-center overflow-hidden text-4xl font-extrabold text-white" style={{ fontFamily: "'Syne'" }}>
@@ -125,7 +125,7 @@ function UserProfile() {
                                     {isOnline(user._id) && <span className="online-dot-lg absolute bottom-1 right-1" />}
                                 </div>
 
-                                {/* Info */}
+                                
                                 <div className="flex-1 min-w-0 pb-1">
                                     <div className="flex items-center gap-3 flex-wrap">
                                         <h1 className="text-2xl sm:text-3xl font-extrabold text-white/90">{user.name}</h1>
@@ -135,7 +135,7 @@ function UserProfile() {
                                     <p className="text-white/35 text-[13px] mt-2 max-w-lg">{user.bio || "Hey there! I'm on CampusConnect."}</p>
                                 </div>
 
-                                {/* Follow and Message buttons */}
+                                
                                 {!isOwnProfile && (
                                     <div className="flex gap-2">
                                         <Link to="/chat" state={{ user: user }} 
@@ -164,7 +164,7 @@ function UserProfile() {
                         </div>
                     </div>
 
-                    {/* Stats */}
+                    
                     <div className="grid grid-cols-4 gap-3 mb-6 up-fade" style={{ animationDelay: '.06s' }}>
                         <div className="up-stat text-center">
                             <p className="text-white/85 text-2xl font-extrabold" style={{ fontFamily: "'Syne'" }}>{posts.length}</p>
@@ -184,7 +184,7 @@ function UserProfile() {
                         </div>
                     </div>
 
-                    {/* Posts */}
+                    
                     <div className="up-fade" style={{ animationDelay: '.12s' }}>
                         <h2 className="text-white/60 text-[14px] font-bold mb-4">Posts by {user.name?.split(" ")[0]}</h2>
                         {posts.length === 0 ? (
@@ -206,7 +206,7 @@ function UserProfile() {
                                             </div>
                                             <p className="text-white/55 text-[13px] leading-relaxed mb-3">{post.content}</p>
 
-                                            {/* Media */}
+                                            
                                             {post.media?.length > 0 && (
                                                 <div className={`media-grid-sm mb-3`} style={{ gridTemplateColumns: post.media.length === 1 ? "1fr" : "1fr 1fr", maxHeight: 300 }}>
                                                     {post.media.slice(0, 4).map((m, i) =>

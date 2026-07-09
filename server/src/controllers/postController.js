@@ -1,9 +1,9 @@
 const Post = require("../models/Post");
 const { uploadToCloudinary, deleteFromCloudinary } = require("../config/cloudinary");
 
-// @desc    Create a new post (with optional media)
-// @route   POST /api/posts
-// @access  Private
+
+
+
 const createPost = async (req, res) => {
     try {
         const { content, category, mediaFiles, postType } = req.body;
@@ -25,16 +25,16 @@ const createPost = async (req, res) => {
             postData.category = category;
         }
 
-        // Handle story expiry
+        
         if (postType === "story") {
-            postData.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+            postData.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); 
         }
 
-        // Upload media files to Cloudinary
+        
         if (mediaFiles && Array.isArray(mediaFiles) && mediaFiles.length > 0) {
             const uploadedMedia = [];
 
-            for (const file of mediaFiles.slice(0, 4)) { // Max 4 files
+            for (const file of mediaFiles.slice(0, 4)) { 
                 try {
                     const result = await uploadToCloudinary(
                         file.data,
@@ -60,7 +60,7 @@ const createPost = async (req, res) => {
             .populate("author", "name username email bio avatar")
             .populate("comments.user", "name username avatar");
 
-        // Emit real-time event
+        
         const io = req.app.get("io");
         if (io) {
             io.emit("post:new", populatedPost);
@@ -80,9 +80,9 @@ const createPost = async (req, res) => {
     }
 };
 
-// @desc    Get all posts (excluding expired stories)
-// @route   GET /api/posts
-// @access  Public
+
+
+
 const getAllPosts = async (req, res) => {
     try {
         const posts = await Post.find({
@@ -91,7 +91,7 @@ const getAllPosts = async (req, res) => {
                 { postType: { $exists: false } },
                 { postType: "story", expiresAt: { $gt: new Date() } },
             ],
-            // Only show regular posts in the main feed
+            
             postType: { $ne: "story" },
         })
             .populate("author", "name username email bio avatar")
@@ -112,9 +112,9 @@ const getAllPosts = async (req, res) => {
     }
 };
 
-// @desc    Get active stories (last 24h)
-// @route   GET /api/posts/stories
-// @access  Private
+
+
+
 const getStories = async (req, res) => {
     try {
         const stories = await Post.find({
@@ -127,7 +127,7 @@ const getStories = async (req, res) => {
             .populate("author", "name username email bio avatar")
             .sort({ createdAt: -1 });
 
-        // Group stories by author
+        
         const grouped = {};
         stories.forEach((story) => {
             const authorId = story.author._id.toString();
@@ -153,9 +153,9 @@ const getStories = async (req, res) => {
     }
 };
 
-// @desc    Get current user's posts
-// @route   GET /api/posts/my-posts
-// @access  Private
+
+
+
 const getMyPosts = async (req, res) => {
     try {
         const posts = await Post.find({ author: req.user._id, postType: { $ne: "story" } })
@@ -177,9 +177,9 @@ const getMyPosts = async (req, res) => {
     }
 };
 
-// @desc    Get posts by a specific user (public profile)
-// @route   GET /api/posts/user/:userId
-// @access  Public
+
+
+
 const getUserPosts = async (req, res) => {
     try {
         const posts = await Post.find({ author: req.params.userId, postType: { $ne: "story" } })
@@ -201,9 +201,9 @@ const getUserPosts = async (req, res) => {
     }
 };
 
-// @desc    Like or unlike a post
-// @route   PUT /api/posts/:id/like
-// @access  Private
+
+
+
 const toggleLikePost = async (req, res) => {
     try {
         const post = await Post.findById(req.params.id)
@@ -228,13 +228,13 @@ const toggleLikePost = async (req, res) => {
 
         await post.save();
 
-        // Emit real-time event
+        
         const io = req.app.get("io");
         if (io) {
             io.emit("post:like", { postId: post._id, likes: post.likes, userId: req.user._id });
         }
 
-        // Add Notification
+        
         if (!alreadyLiked && req.user._id.toString() !== post.author._id.toString()) {
             const Notification = require("../models/Notification");
             await Notification.create({
@@ -264,9 +264,9 @@ const toggleLikePost = async (req, res) => {
     }
 };
 
-// @desc    Add a comment to a post
-// @route   POST /api/posts/:id/comment
-// @access  Private
+
+
+
 const addCommentToPost = async (req, res) => {
     try {
         const { text } = req.body;
@@ -298,7 +298,7 @@ const addCommentToPost = async (req, res) => {
             .populate("author", "name username email bio avatar")
             .populate("comments.user", "name username avatar");
 
-        // Emit real-time event
+        
         const io = req.app.get("io");
         if (io) {
             io.emit("post:comment", { postId: updatedPost._id, comments: updatedPost.comments });
@@ -333,9 +333,9 @@ const addCommentToPost = async (req, res) => {
     }
 };
 
-// @desc    Edit own post
-// @route   PUT /api/posts/:id
-// @access  Private
+
+
+
 const editPost = async (req, res) => {
     try {
         const { content, category } = req.body;
@@ -349,7 +349,7 @@ const editPost = async (req, res) => {
             });
         }
 
-        // Only allow the author to edit
+        
         if (post.author.toString() !== req.user._id.toString()) {
             return res.status(403).json({
                 success: false,
@@ -389,9 +389,9 @@ const editPost = async (req, res) => {
     }
 };
 
-// @desc    Delete own post
-// @route   DELETE /api/posts/:id
-// @access  Private
+
+
+
 const deletePost = async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
@@ -403,7 +403,7 @@ const deletePost = async (req, res) => {
             });
         }
 
-        // Only allow the author to delete
+        
         if (post.author.toString() !== req.user._id.toString()) {
             return res.status(403).json({
                 success: false,
@@ -411,7 +411,7 @@ const deletePost = async (req, res) => {
             });
         }
 
-        // Delete media from Cloudinary
+        
         if (post.media && post.media.length > 0) {
             for (const m of post.media) {
                 if (m.publicId) {
@@ -439,9 +439,9 @@ const deletePost = async (req, res) => {
     }
 };
 
-// @desc    Toggle bookmark a post
-// @route   PUT /api/posts/:id/bookmark
-// @access  Private
+
+
+
 const toggleBookmark = async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
@@ -472,9 +472,9 @@ const toggleBookmark = async (req, res) => {
     }
 };
 
-// @desc    Get user's bookmarked posts
-// @route   GET /api/posts/bookmarked
-// @access  Private
+
+
+
 const getBookmarkedPosts = async (req, res) => {
     try {
         const posts = await Post.find({ bookmarks: req.user._id })
@@ -493,9 +493,9 @@ const getBookmarkedPosts = async (req, res) => {
     }
 };
 
-// @desc    Increment share count
-// @route   PUT /api/posts/:id/share
-// @access  Private
+
+
+
 const sharePost = async (req, res) => {
     try {
         const post = await Post.findByIdAndUpdate(

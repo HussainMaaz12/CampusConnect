@@ -2,7 +2,7 @@ const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const User = require("./models/User");
 
-// Online users: Map<userId, Set<socketId>>
+
 const onlineUsers = new Map();
 
 function getOnlineUserIds() {
@@ -31,7 +31,7 @@ function initSocket(httpServer) {
         pingInterval: 25000,
     });
 
-    // Authentication middleware
+    
     io.use(async (socket, next) => {
         try {
             const token = socket.handshake.auth?.token;
@@ -58,19 +58,19 @@ function initSocket(httpServer) {
         const uid = socket.userId;
         console.log(`⚡ User connected: ${socket.userData.username} (${uid})`);
 
-        // Track online user
+        
         if (!onlineUsers.has(uid)) {
             onlineUsers.set(uid, new Set());
         }
         onlineUsers.get(uid).add(socket.id);
 
-        // Broadcast updated online list
+        
         io.emit("users:online", getOnlineUserIds());
 
-        // Send current online list to the newly connected client
+        
         socket.emit("users:online", getOnlineUserIds());
 
-        // Typing indicators
+        
         socket.on("chat:typing", (data) => {
             if (data.receiverId) {
                 emitToUser(io, data.receiverId, "chat:typing", { senderId: uid });

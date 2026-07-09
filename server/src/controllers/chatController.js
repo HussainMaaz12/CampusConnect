@@ -1,18 +1,18 @@
 const Message = require("../models/Message");
 const User = require("../models/User");
 
-// @desc    Get all conversations for the logged-in user
-// @route   GET /api/chat/conversations
-// @access  Private
+
+
+
 const getConversations = async (req, res) => {
     try {
         const userId = req.user._id;
-        // Find all distinct users we've chatted with
+        
         const messages = await Message.find({
             $or: [{ sender: userId }, { receiver: userId }]
         }).sort({ createdAt: -1 });
 
-        // Map them nicely to just unique users and last message
+        
         const convos = new Map();
         
         for (let m of messages) {
@@ -39,9 +39,9 @@ const getConversations = async (req, res) => {
     }
 };
 
-// @desc    Get chat history with a specific user
-// @route   GET /api/chat/:userId
-// @access  Private
+
+
+
 const getChatHistory = async (req, res) => {
     try {
         const myId = req.user._id;
@@ -54,7 +54,7 @@ const getChatHistory = async (req, res) => {
             ]
         }).sort({ createdAt: 1 });
 
-        // Mark messages as read
+        
         await Message.updateMany(
             { sender: targetId, receiver: myId, read: false },
             { $set: { read: true } }
@@ -67,9 +67,9 @@ const getChatHistory = async (req, res) => {
     }
 };
 
-// @desc    Send a message
-// @route   POST /api/chat/:userId
-// @access  Private
+
+
+
 const sendMessage = async (req, res) => {
     try {
         const { content } = req.body;
@@ -90,7 +90,7 @@ const sendMessage = async (req, res) => {
         const { emitToUser } = require("../socket");
         if (io && emitToUser) {
             emitToUser(io, receiverId, "chat:receive", newMessage);
-            // Also notify them
+            
             emitToUser(io, receiverId, "notification:new", { type: "message", message: "New message received", sender: req.user });
         }
 

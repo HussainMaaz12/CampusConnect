@@ -21,7 +21,7 @@ function Navbar() {
     const [unreadCount, setUnreadCount] = useState(0);
     const notifRef = useRef();
 
-    // Fetch initial notifications
+    
     useEffect(() => {
         if (isAuthenticated) {
             api.get("/notifications").then(res => {
@@ -33,7 +33,7 @@ function Navbar() {
         }
     }, [isAuthenticated]);
 
-    // Listen for real-time notifications
+    
     useEffect(() => {
         if (!socket) return;
         const handleNotif = (data) => {
@@ -53,7 +53,7 @@ function Navbar() {
         }
     };
 
-    // Close dropdowns if clicked outside
+    
     useEffect(() => {
         function handleClickOutside(event) {
             if (settingsRef.current && !settingsRef.current.contains(event.target)) {
@@ -175,7 +175,7 @@ function Navbar() {
                 <div className="relative">
                     <div className="nav-glow" />
                     <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3">
-                        {/* Brand */}
+                        
                         <Link to={isAuthenticated ? "/feed" : "/"} className="flex items-center gap-2.5 group flex-shrink-0">
                             <div className="w-9 h-9 rounded-[11px] flex items-center justify-center text-[11px] font-extrabold shadow-lg transition-all duration-300 group-hover:scale-105" style={{
                                 background: "linear-gradient(135deg, #6C63FF, #00D4AA)",
@@ -189,7 +189,7 @@ function Navbar() {
                             </span>
                         </Link>
 
-                        {/* Center Nav — Desktop */}
+                        
                         <nav className="nav-desktop-links flex items-center gap-1">
                             {isAuthenticated ? (
                                 <>
@@ -207,6 +207,14 @@ function Navbar() {
                                         </svg>
                                         <span>Profile</span>
                                     </Link>
+                                    {authUser?.role === 'admin' && (
+                                        <Link to="/admin" className={`nav-link ${isActive("/admin") ? "active" : ""}`} style={{ color: 'gold', fontWeight: 'bold' }}>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill={isActive("/admin") ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                            </svg>
+                                            <span>Master Control</span>
+                                        </Link>
+                                    )}
                                 </>
                             ) : (
                                 <>
@@ -222,7 +230,7 @@ function Navbar() {
                             )}
                         </nav>
 
-                        {/* Right - User & Logout */}
+                        
                         <div className="flex items-center gap-2.5 flex-shrink-0">
                             {isAuthenticated && (
                                 <>
@@ -240,14 +248,14 @@ function Navbar() {
                                         </span>
                                     </Link>
                                 
-                                    {/* Chat Notification Shortcut */}
+                                    
                                     <Link to="/chat" className="relative nav-logout text-white/50 hover:text-white flex items-center justify-center !p-2" title="Messages">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
                                         </svg>
                                     </Link>
 
-                                    {/* Notification Bell */}
+                                    
                                     <div className="relative" ref={notifRef}>
                                         <button onClick={handleNotifClick} className="relative nav-logout text-white/50 hover:text-white flex items-center justify-center !p-2">
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -303,7 +311,7 @@ function Navbar() {
                                         </span>
                                     </button>
 
-                                    {/* Settings Dropdown */}
+                                    
                                     <div className="relative" ref={settingsRef}>
                                         <button onClick={() => setSettingsOpen(!settingsOpen)} className="nav-logout text-white/50 hover:text-white flex items-center justify-center !p-2">
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -327,7 +335,7 @@ function Navbar() {
                                 </>
                             )}
 
-                            {/* Mobile hamburger */}
+                            
                             <button className="nav-mobile-btn" onClick={() => setMobileOpen(!mobileOpen)}>
                                 {mobileOpen ? (
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -340,7 +348,7 @@ function Navbar() {
                 </div>
             </header>
 
-            {/* Mobile menu */}
+            
             {mobileOpen && (
                 <div className="nav-mobile-menu" onClick={() => setMobileOpen(false)}>
                     {isAuthenticated ? (
@@ -353,6 +361,12 @@ function Navbar() {
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill={isActive("/profile") ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                                 Profile
                             </Link>
+                            {authUser?.role === 'admin' && (
+                                <Link to="/admin" className={`nav-link ${isActive("/admin") ? "active" : ""}`} style={{ fontSize: 16, padding: "14px 20px", color: 'gold', fontWeight: 'bold' }}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill={isActive("/admin") ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                    Master Control
+                                </Link>
+                            )}
                         </>
                     ) : (
                         <>
