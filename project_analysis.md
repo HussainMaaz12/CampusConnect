@@ -66,3 +66,96 @@ Staged and committed all the changes, including:
 
 Successfully pushed to the remote branch **`main`** of the GitHub Repository:
 `https://github.com/HussainMaaz12/CampusConnect.git`
+
+
+// In-place comment removal utility for JavaScript/React code.
+// Removes single-line (//), multi-line (/* */), and JSX comments ({/* */}).
+// WARNING: This script modifies files in place.
+
+const fs = require('fs');
+const path = require('path');
+
+const targetDirectories = [
+  './client/src',
+  './server/src'
+];
+
+// Regex to capture:
+// 1. Single-line comments: // ...$  (until newline)
+// 2. Block comments: /* ... */ (non-greedy)
+// 3. JSX comments: {/* ... */}
+const commentRegex = /(\/\/.*$|\/\*[\s\S]*?\*\/|\{[\s\S]*?\})/gm;
+
+function cleanupCommentsInFile(filePath) {
+  try {
+    const code = fs.readFileSync(filePath, 'utf-8');
+    
+    // Use a replacer function to avoid removing parts of strings or regex literals
+    // If a comment is found, we replace it with an empty string.
+    // This is aggressive, so we double-check that it's actually a comment.
+    
+    let hasChanges = false;
+    const cleanedCode = code.replace(commentRegex, (match) => {
+      // Safety check: Ensure the match is not a string or regex literal
+      // This is a best-effort attempt. Complex cases might need AST parsing.
+      if (
+        !match.startsWith('"') && 
+        !match.startsWith("'") &&
+        !match.startsWith('`') &&
+        !match.startsWith('/**') // Avoid comment-like strings
+      ) {
+        hasChanges = true;
+        return '';
+      }
+      return match; // Return original if it looks like a string
+    });
+
+    if (hasChanges && cleanedCode !== code) {
+      fs.writeFileSync(filePath, cleanedCode, 'utf-8');
+      console.log(`Cleaned: ${filePath}`);
+    }
+  } catch (error) {
+    console.error(`Error processing ${filePath}:`, error.message);
+  }
+}
+
+function processDirectory(dirPath) {
+  if (!fs.existsSync(dirPath)) {
+    console.warn(`Directory not found: ${dirPath}`);
+    return;
+  }
+
+  const files = fs.readdirSync(dirPath);
+  
+  files.forEach(file => {
+    const fullPath = path.join(dirPath, file);
+    const stat = fs.statSync(fullPath);
+
+    if (stat.isDirectory()) {
+      processDirectory(fullPath);
+    } else if (file.endsWith('.js') || file.endsWith('.jsx') || file.endsWith('.ts') || file.endsWith('.tsx')) {
+      cleanupCommentsInFile(fullPath);
+    }
+  });
+}
+
+console.log('Starting comment cleanup...');
+
+targetDirectories.forEach(dir => processDirectory(dir));
+
+console.log('Comment cleanup completed.');
+
+
+// Run this in your terminal (in the root directory)
+// Make sure you have Node.js installed
+
+npx -y esbuild remove-comments.js --bundle --platform=node --outfile=remove-comments-out.js
+
+
+
+{
+  "scripts": {
+    "remove-comments": "node ./remove-comments-out.js"
+  }
+}
+
